@@ -170,6 +170,9 @@ nav.scrolled{padding:10px 52px;box-shadow:var(--shadow);}
 /* ══ LEGISLATIONS ══ */
 #section-legislations{background:linear-gradient(160deg,var(--cream) 0%,var(--beige) 100%);}
 .leg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+.leg-section-heading{grid-column:1/-1;font-family:"Playfair Display",serif;font-size:20px;color:var(--dark-brown);margin-top:28px;margin-bottom:4px;padding-bottom:10px;border-bottom:1px solid rgba(196,168,130,0.25);}
+.leg-section-heading:first-child{margin-top:0;}
+.leg-date{font-size:11px;font-weight:600;color:var(--tan);letter-spacing:0.5px;margin-bottom:8px;}
 .leg-card{background:var(--warm-white);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow);border:1px solid rgba(196,168,130,0.1);transition:all 0.3s;}
 .leg-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);}
 .leg-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
