@@ -38,13 +38,29 @@ function renderProjects() {
   observeReveal();
 }
 
+function legCardHtml(l) {
+  const icon = l.category === 'cics' ? '📜' : '🏛️';
+  const name = l.name || l.title;
+  const desc = l.title && l.name ? l.title : (l.desc || '');
+  return `<div class="leg-card reveal"><div class="leg-header"><div class="leg-icon">${icon}</div><div class="leg-title">${name}</div></div>${l.date ? `<div class="leg-date">${l.date}</div>` : ''}<div class="leg-authors">${l.authors}</div><p class="leg-desc">${desc}</p>${l.link ? `<a href="${l.link}" target="_blank" class="leg-link">View Document ↗</a>` : ''}</div>`;
+}
+
 function renderLegislations() {
   const g = document.getElementById('legislationsGrid');
   if (!g) return;
-  g.innerHTML = appData.legislations.map(l =>
-    `<div class="leg-card reveal"><div class="leg-header"><div class="leg-icon">🏛️</div><div class="leg-title">${l.title}</div></div><div class="leg-authors">${l.authors}</div><p class="leg-desc">${l.desc}</p>${l.link?`<a href="${l.link}" target="_blank" class="leg-link">View Document ↗</a>`:''}</div>`
-  ).join('');
-  g.innerHTML += `<div class="leg-card admin-only" style="border:2px dashed var(--tan);background:transparent;box-shadow:none;min-height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--tan);font-size:13px;font-style:italic;cursor:pointer;" onclick="requestAdmin()"><div style="font-size:32px;opacity:0.4;">+</div><span>Add legislation (Admin)</span></div>`;
+  const sections = [
+    { key: 'senate', label: 'Senate Legislations' },
+    { key: 'cics', label: 'CICS Student Government Legislations' }
+  ];
+  let html = '';
+  sections.forEach(({ key, label }) => {
+    const items = appData.legislations.filter(l => l.category === key);
+    if (!items.length) return;
+    html += `<div class="leg-section-heading reveal">${label}</div>`;
+    html += items.map(legCardHtml).join('');
+  });
+  html += `<div class="leg-card admin-only" style="border:2px dashed var(--tan);background:transparent;box-shadow:none;min-height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--tan);font-size:13px;font-style:italic;cursor:pointer;" onclick="requestAdmin()"><div style="font-size:32px;opacity:0.4;">+</div><span>Add legislation (Admin)</span></div>`;
+  g.innerHTML = html;
   observeReveal();
 }
 
@@ -83,7 +99,7 @@ function adminList(items, editFn, deleteFn, labelFn, subFn) {
 }
 function renderAdminCerts()        { document.getElementById('adminCertList').innerHTML        = adminList(appData.certs,        'editCert',        'deleteCert',        c=>c.name,  c=>c.org); }
 function renderAdminProjects()     { document.getElementById('adminProjectsList').innerHTML     = adminList(appData.projects,     'editProject',     'deleteProject',     p=>p.title, p=>p.tech.join(', ')); }
-function renderAdminLegislations() { document.getElementById('adminLegislationsList').innerHTML = adminList(appData.legislations, 'editLegislation', 'deleteLegislation', l=>l.title, l=>l.authors); }
+function renderAdminLegislations() { document.getElementById('adminLegislationsList').innerHTML = adminList(appData.legislations, 'editLegislation', 'deleteLegislation', l=>l.name||l.title, l=>l.authors); }
 
 // — Certs —
 function saveCert() {
@@ -160,7 +176,7 @@ function saveLegislation() {
   const editId=document.getElementById('editingLegId').value;
   const title=document.getElementById('aLegTitle').value.trim();
   if(!title){showToast('Enter a title.');return;}
-  const leg={id:editId?+editId:Date.now(),title,authors:document.getElementById('aLegAuthors').value.trim(),desc:document.getElementById('aLegDesc').value.trim(),link:document.getElementById('aLegLink').value.trim()};
+  const leg={id:editId?+editId:Date.now(),category:document.getElementById('aLegCategory')?.value||'senate',name:title,title:document.getElementById('aLegDesc').value.trim(),authors:document.getElementById('aLegAuthors').value.trim(),date:document.getElementById('aLegDate')?.value.trim()||'',link:document.getElementById('aLegLink').value.trim()};
   if(editId){const i=appData.legislations.findIndex(l=>l.id===+editId);if(i!==-1)appData.legislations[i]=leg;}
   else appData.legislations.push(leg);
   renderLegislations();renderAdminLegislations();clearLegForm();showToast(editId?'Updated ✓':'Added ✓');
@@ -168,9 +184,11 @@ function saveLegislation() {
 function editLegislation(id){
   const l=appData.legislations.find(x=>x.id===id);if(!l)return;
   document.getElementById('editingLegId').value=id;
-  document.getElementById('aLegTitle').value=l.title;
+  document.getElementById('aLegTitle').value=l.name||l.title;
   document.getElementById('aLegAuthors').value=l.authors;
-  document.getElementById('aLegDesc').value=l.desc;
+  document.getElementById('aLegDesc').value=l.title||l.desc||'';
+  const catEl=document.getElementById('aLegCategory'); if(catEl) catEl.value=l.category||'senate';
+  const dateEl=document.getElementById('aLegDate'); if(dateEl) dateEl.value=l.date||'';
   document.getElementById('aLegLink').value=l.link||'';
   showToast('Editing legislation...');
 }
@@ -181,7 +199,8 @@ function deleteLegislation(id){
 }
 function clearLegForm(){
   document.getElementById('editingLegId').value='';
-  ['aLegTitle','aLegAuthors','aLegDesc','aLegLink'].forEach(id=>document.getElementById(id).value='');
+  ['aLegTitle','aLegAuthors','aLegDesc','aLegLink','aLegDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const catEl=document.getElementById('aLegCategory'); if(catEl) catEl.value='senate';
 }
 
 // — Personal & media —
