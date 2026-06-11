@@ -7,7 +7,7 @@
 <title>Legislations — Rachel Palisoc Acilo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Fraunces:ital,wght@1,300;1,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -137,9 +137,11 @@
         <div class="admin-list" id="adminLegislationsList"></div>
         <h4 style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brown);margin-bottom:10px;">Add / Edit</h4>
         <input type="hidden" id="editingLegId">
-        <div class="form-row"><label>Title</label><input id="aLegTitle" placeholder="e.g. Senate Resolution No. 10"></div>
+        <div class="form-row"><label>Category</label><select id="aLegCategory"><option value="senate">Senate Legislations</option><option value="cics">CICS Student Government</option></select></div>
+        <div class="form-row"><label>Name</label><input id="aLegTitle" placeholder="e.g. Senate Resolution 06-005"></div>
         <div class="form-row"><label>Author(s)</label><input id="aLegAuthors" placeholder="Rachel Palisoc Acilo, et al."></div>
-        <div class="form-row"><label>Description</label><textarea id="aLegDesc"></textarea></div>
+        <div class="form-row"><label>Title</label><textarea id="aLegDesc"></textarea></div>
+        <div class="form-row"><label>Date</label><input id="aLegDate" placeholder="e.g. 9/1/2024"></div>
         <div class="form-row"><label>Link (optional)</label><input id="aLegLink" placeholder="https://..."></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="admin-btn" onclick="saveLegislation()">Save</button>
@@ -149,7 +151,8 @@
     </div>
   </div>
 </div>
-<script src="/js/data.js"></script>
-<script src="/js/main.js"></script>
+<script src="data.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
+
