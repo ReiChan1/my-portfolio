@@ -252,6 +252,18 @@ function initSkillBars() {
 }
 
 // ══════════════════════════════════════════════
+//  CONTENT PROTECTION
+// ══════════════════════════════════════════════
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+document.addEventListener('keydown', e => {
+  const key = e.key.toUpperCase();
+  if (key === 'F12') e.preventDefault();
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'J', 'C'].includes(key)) e.preventDefault();
+  if ((e.ctrlKey || e.metaKey) && key === 'U') e.preventDefault();
+});
+
+// ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
 (function init(){
