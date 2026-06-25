@@ -3,7 +3,7 @@ const appData = {
   projects: [
     {id:1,title:'Machine Learning in Google Colab',desc:'Exploratory machine learning notebooks covering data preprocessing, model training, and evaluation using Python in Google Colab.',tech:['Python','Scikit-learn','Pandas','Google Colab'],demo:'https://colab.research.google.com/drive/1fqjC86eRbb5BuzwGh3VmQod76UJArE1o?usp=sharing',img:'/images/mlimg.jpg'},
     {id:2,title:'Crochet WebApp Prototype',desc:'Your complete crochet world: stitch counter, project tracker, yarn stash, social feed, marketplace, gamification, journal, portfolio, commissions, and admin dashboard.',tech:['React 18','TypeScript','Tailwind CSS','Vite', 'Supabase'],demo:'https://reiverie-crochet.vercel.app',github:'https://github.com/ReiChan1/ReiverieCrochet',img:'/images/yarnimg.jpg'},
-    {id:3,title:'Into Rei's Domain',desc:'The cosmos of Rei's Astral Domain where stars, planets, and comets meets. This is the entire map of Rei's life',tech:['TypeScript','CSS','Java Script'],demo:'https://rei-cosmos.vercel.app',img:'/images/planet.jpg'},
+    {id:3,title:'Into Rei's Domain',desc:'The cosmos of Rei's Astral Domain where planets and stars meet showing the entire map of Rei's life',tech:['TypeScript','CSS','Java Script'],demo:'https://rei-cosmos.vercel.app',img:'/images/planet.jpg'},
   ],
   legislations: [
     {id:1,category:'senate',name:'Senate Resolution 06-005',title:'A Resolution Congratulating the Graduating Students of Batch 2023 - 2024 of DLSU-D',authors:'Sen. Rachel Palisoc Acilo and Sen. Sophia M. Maranan',date:'9/1/2024',link:'https://www.facebook.com/share/p/18eJRYNtP8/'},
