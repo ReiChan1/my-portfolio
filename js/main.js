@@ -77,10 +77,10 @@ function renderCerts() {
 // ══════════════════════════════════════════════
 function openResume() {
   try {
-    const bytes = Uint8Array.from(atob(appData.resumeB64), c => c.charCodeAt(0));
-    const blob  = new Blob([bytes], {type:'application/pdf'});
-    window.open(URL.createObjectURL(blob), '_blank');
-  } catch(e) { showToast('Could not open resume.'); }
+    window.open(appData.resumeURL, '_blank', 'noopener,noreferrer');
+  } catch (e) {
+    showToast('Could not open resume.');
+  }
 }
 
 // ══════════════════════════════════════════════
