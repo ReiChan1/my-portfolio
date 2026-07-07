@@ -1,5 +1,5 @@
 const appData = {
-  resumeB64: 'https://dlsudphl-my.sharepoint.com/:b:/g/personal/arp0144_dlsud_edu_ph/IQB2LY9UGkTtR6OrBxvLRemTAfVg_xS8D4Km_waNXwoXERM?e=0vTxjs',
+  resumeURL: 'https://dlsudphl-my.sharepoint.com/:b:/g/personal/arp0144_dlsud_edu_ph/IQB2LY9UGkTtR6OrBxvLRemTAfVg_xS8D4Km_waNXwoXERM?e=0vTxjs',
   projects: [
     {id:1,title:'Machine Learning in Google Colab',desc:'Exploratory machine learning notebooks covering data preprocessing, model training, and evaluation using Python in Google Colab.',tech:['Python','Scikit-learn','Pandas','Google Colab'],demo:'https://colab.research.google.com/drive/1fqjC86eRbb5BuzwGh3VmQod76UJArE1o?usp=sharing',img:'/images/mlimg.jpg'},
     {id:2,title:"OC Smart Mirror",desc:"OC Smart Mirror is a web-based companion platform for our custom-built smart mirror designed for health tracking. It allows users to monitor vital health metrics, view recorded measurements, and securely store their health data.",tech:['TypeScript','CSS','Java Script','Supabase','React'],demo:'https://oc-smart-mirror.vercel.app',img:'/images/ocimg.jpg'},
