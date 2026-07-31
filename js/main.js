@@ -1,8 +1,8 @@
 // ══════════════════════════════════════════════
 //  NAVIGATION — multi-page
 // ══════════════════════════════════════════════
-const PAGES = ['home','profile','projects','legislations','social'];
-const PAGE_FILES = {home:'index.html',profile:'profile.html',projects:'projects.html',legislations:'legislations.html',social:'social.html'};
+const PAGES = ['home', 'profile', 'projects', 'legislations', 'social'];
+const PAGE_FILES = { home: 'index.html', profile: 'profile.html', projects: 'projects.html', legislations: 'legislations.html', social: 'social.html' };
 
 function navigateTo(page) {
   if (!PAGES.includes(page)) page = 'home';
@@ -28,11 +28,12 @@ function renderProjects() {
   if (!g) return;
   g.innerHTML = appData.projects.map(p => {
     const img = p.img ? `<img src="${p.img}" alt="${p.title}">` : `<div class="proj-img-ph"><span>💻</span><small>Project preview</small></div>`;
-    const techs = p.tech.map(t=>`<span class="tech">${t}</span>`).join('');
-    const demo  = p.demo   ? `<a href="${p.demo}"   target="_blank" class="pb pb-dark">Live Demo</a>` : '';
-    const gh    = p.github ? `<a href="${p.github}" target="_blank" class="pb pb-ghost">GitHub</a>`   : '';
+    const techs = p.tech.map(t => `<span class="tech">${t}</span>`).join('');
+    const demo = p.demo ? `<a href="${p.demo}" target="_blank" class="pb pb-dark">Live Demo</a>` : '';
+    const gh = p.github ? `<a href="${p.github}" target="_blank" class="pb pb-ghost">GitHub</a>` : '';
     return `<div class="proj-card reveal"><div class="proj-img">${img}</div><div class="proj-body"><div class="proj-techs">${techs}</div><h3 class="proj-title">${p.title}</h3><p class="proj-desc">${p.desc}</p><div class="proj-actions">${demo}${gh}</div></div></div>`;
   }).join('');
+  
   // Admin-only add card
   g.innerHTML += `<div class="proj-card admin-only" style="border:2px dashed var(--tan);background:transparent;box-shadow:none;min-height:300px;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--tan);font-size:13px;font-style:italic;cursor:pointer;" onclick="requestAdmin()"><div style="font-size:32px;opacity:0.4;">+</div><span>Add project (Admin)</span></div>`;
   observeReveal();
@@ -84,127 +85,214 @@ function openResume() {
 }
 
 // ══════════════════════════════════════════════
-//  ADMIN CRUD
+//  ADMIN CRUD & MODALS
 // ══════════════════════════════════════════════
+let loginAttempts = 0;
+let lockoutTimer = null;
+
+function requestAdmin() {
+  if (document.body.classList.contains('admin-mode')) {
+    openAdminPanel();
+  } else {
+    openLoginModal();
+  }
+}
+
+function openLoginModal() {
+  const modal = document.getElementById('adminLoginModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeLoginModal() {
+  const modal = document.getElementById('adminLoginModal');
+  if (modal) modal.classList.remove('open');
+  const err = document.getElementById('loginErr');
+  if (err) err.textContent = '';
+}
+
+function loginAdmin() {
+  const passInput = document.getElementById('adminPassInput');
+  const err = document.getElementById('loginErr');
+  if (!passInput) return;
+
+  if (passInput.value === appData.adminPassword) {
+    document.body.classList.add('admin-mode');
+    closeLoginModal();
+    openAdminPanel();
+    showToast('Welcome Admin!');
+    passInput.value = '';
+    loginAttempts = 0;
+  } else {
+    loginAttempts++;
+    if (loginAttempts >= 3) {
+      if (err) err.innerHTML = `<span class="lockout-msg">Too many attempts. Locked out for 30s.</span>`;
+      passInput.disabled = true;
+      let count = 30;
+      lockoutTimer = setInterval(() => {
+        count--;
+        if (count <= 0) {
+          clearInterval(lockoutTimer);
+          passInput.disabled = false;
+          if (err) err.textContent = '';
+          loginAttempts = 0;
+        } else if (err) {
+          err.innerHTML = `<span class="lockout-msg">Try again in ${count}s</span>`;
+        }
+      }, 1000);
+    } else if (err) {
+      err.textContent = `Incorrect password. (${3 - loginAttempts} attempts left)`;
+    }
+  }
+}
+
+function logoutAdmin() {
+  document.body.classList.remove('admin-mode');
+  closeAdminPanel();
+  showToast('Logged out.');
+}
+
+function openAdminPanel() {
+  renderAdminCerts();
+  renderAdminProjects();
+  renderAdminLegislations();
+  const panel = document.getElementById('adminPanel');
+  if (panel) panel.classList.add('open');
+}
+
+function closeAdminPanel() {
+  const panel = document.getElementById('adminPanel');
+  if (panel) panel.classList.remove('open');
+}
+
 function adminList(items, editFn, deleteFn, labelFn, subFn) {
   return items.map(item =>
     `<div class="admin-item">
       <div class="admin-item-info"><strong>${labelFn(item)}</strong><small>${subFn(item)}</small></div>
       <div class="admin-item-btns">
         <button class="admin-btn secondary" style="padding:6px 12px;font-size:11px;" onclick="${editFn}(${item.id})">Edit</button>
-        <button class="admin-btn danger"    style="padding:6px 12px;font-size:11px;" onclick="${deleteFn}(${item.id})">Del</button>
+        <button class="admin-btn danger" style="padding:6px 12px;font-size:11px;" onclick="${deleteFn}(${item.id})">Del</button>
       </div>
     </div>`
   ).join('');
 }
-function renderAdminCerts()        { document.getElementById('adminCertList').innerHTML        = adminList(appData.certs,        'editCert',        'deleteCert',        c=>c.name,  c=>c.org); }
-function renderAdminProjects()     { document.getElementById('adminProjectsList').innerHTML     = adminList(appData.projects,     'editProject',     'deleteProject',     p=>p.title, p=>p.tech.join(', ')); }
-function renderAdminLegislations() { document.getElementById('adminLegislationsList').innerHTML = adminList(appData.legislations, 'editLegislation', 'deleteLegislation', l=>l.name||l.title, l=>l.authors); }
+
+function renderAdminCerts() {
+  const el = document.getElementById('adminCertList');
+  if (el) el.innerHTML = adminList(appData.certs, 'editCert', 'deleteCert', c => c.name, c => c.org);
+}
+function renderAdminProjects() {
+  const el = document.getElementById('adminProjectsList');
+  if (el) el.innerHTML = adminList(appData.projects, 'editProject', 'deleteProject', p => p.title, p => p.tech.join(', '));
+}
+function renderAdminLegislations() {
+  const el = document.getElementById('adminLegislationsList');
+  if (el) el.innerHTML = adminList(appData.legislations, 'editLegislation', 'deleteLegislation', l => l.name || l.title, l => l.authors);
+}
 
 // — Certs —
 function saveCert() {
   const editId = document.getElementById('editingCertId').value;
-  const name   = document.getElementById('aCertName').value.trim();
+  const name = document.getElementById('aCertName').value.trim();
   if (!name) { showToast('Enter a name.'); return; }
-  const cert = {id: editId ? +editId : Date.now(), name, org: document.getElementById('aCertOrg').value.trim()};
-  if (editId) { const i = appData.certs.findIndex(c=>c.id===+editId); if(i!==-1) appData.certs[i]=cert; }
+  const cert = { id: editId ? +editId : Date.now(), name, org: document.getElementById('aCertOrg').value.trim() };
+  if (editId) { const i = appData.certs.findIndex(c => c.id === +editId); if (i !== -1) appData.certs[i] = cert; }
   else appData.certs.push(cert);
-  renderCerts(); renderAdminCerts(); clearCertForm(); showToast(editId?'Cert updated ✓':'Cert added ✓');
+  renderCerts(); renderAdminCerts(); clearCertForm(); showToast(editId ? 'Cert updated ✓' : 'Cert added ✓');
 }
 function editCert(id) {
-  const c = appData.certs.find(x=>x.id===id); if(!c) return;
+  const c = appData.certs.find(x => x.id === id); if (!c) return;
   document.getElementById('editingCertId').value = id;
   document.getElementById('aCertName').value = c.name;
-  document.getElementById('aCertOrg').value  = c.org;
+  document.getElementById('aCertOrg').value = c.org;
   showToast('Editing cert...');
 }
 function deleteCert(id) {
   if (!confirm('Delete this certification?')) return;
-  appData.certs = appData.certs.filter(c=>c.id!==id);
+  appData.certs = appData.certs.filter(c => c.id !== id);
   renderCerts(); renderAdminCerts(); showToast('Deleted.');
 }
 function clearCertForm() {
-  document.getElementById('editingCertId').value='';
-  ['aCertName','aCertOrg'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('editingCertId').value = '';
+  ['aCertName', 'aCertOrg'].forEach(id => document.getElementById(id).value = '');
 }
 
 // — Projects —
 function saveProject() {
   const editId = document.getElementById('editingProjectId').value;
-  const title  = document.getElementById('aProjTitle').value.trim();
+  const title = document.getElementById('aProjTitle').value.trim();
   if (!title) { showToast('Enter a title.'); return; }
   const imgFile = document.getElementById('aProjImg').files[0];
   const finish = imgSrc => {
     const proj = {
       id: editId ? +editId : Date.now(), title,
-      desc:   document.getElementById('aProjDesc').value.trim(),
-      tech:   document.getElementById('aProjTech').value.split(',').map(t=>t.trim()).filter(Boolean),
-      demo:   document.getElementById('aProjDemo').value.trim(),
+      desc: document.getElementById('aProjDesc').value.trim(),
+      tech: document.getElementById('aProjTech').value.split(',').map(t => t.trim()).filter(Boolean),
+      demo: document.getElementById('aProjDemo').value.trim(),
       github: document.getElementById('aProjGit').value.trim(),
-      img:    imgSrc
+      img: imgSrc
     };
-    if (editId) { const i=appData.projects.findIndex(p=>p.id===+editId); if(i!==-1) appData.projects[i]=proj; }
+    if (editId) { const i = appData.projects.findIndex(p => p.id === +editId); if (i !== -1) appData.projects[i] = proj; }
     else appData.projects.push(proj);
-    renderProjects(); renderAdminProjects(); clearProjectForm(); showToast(editId?'Project updated ✓':'Project added ✓');
+    renderProjects(); renderAdminProjects(); clearProjectForm(); showToast(editId ? 'Project updated ✓' : 'Project added ✓');
   };
-  if (imgFile) { const r=new FileReader(); r.onload=e=>finish(e.target.result); r.readAsDataURL(imgFile); }
-  else finish(editId ? (appData.projects.find(p=>p.id===+editId)?.img||null) : null);
+  if (imgFile) { const r = new FileReader(); r.onload = e => finish(e.target.result); r.readAsDataURL(imgFile); }
+  else finish(editId ? (appData.projects.find(p => p.id === +editId)?.img || null) : null);
 }
 function editProject(id) {
-  const p=appData.projects.find(x=>x.id===id); if(!p) return;
-  document.getElementById('editingProjectId').value=id;
-  document.getElementById('aProjTitle').value=p.title;
-  document.getElementById('aProjDesc').value=p.desc;
-  document.getElementById('aProjTech').value=p.tech.join(', ');
-  document.getElementById('aProjDemo').value=p.demo||'';
-  document.getElementById('aProjGit').value=p.github||'';
+  const p = appData.projects.find(x => x.id === id); if (!p) return;
+  document.getElementById('editingProjectId').value = id;
+  document.getElementById('aProjTitle').value = p.title;
+  document.getElementById('aProjDesc').value = p.desc;
+  document.getElementById('aProjTech').value = p.tech.join(', ');
+  document.getElementById('aProjDemo').value = p.demo || '';
+  document.getElementById('aProjGit').value = p.github || '';
   showToast('Editing project...');
 }
 function deleteProject(id) {
-  if(!confirm('Delete this project?')) return;
-  appData.projects=appData.projects.filter(p=>p.id!==id);
+  if (!confirm('Delete this project?')) return;
+  appData.projects = appData.projects.filter(p => p.id !== id);
   renderProjects(); renderAdminProjects(); showToast('Deleted.');
 }
 function clearProjectForm() {
-  document.getElementById('editingProjectId').value='';
-  ['aProjTitle','aProjDesc','aProjTech','aProjDemo','aProjGit'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('aProjImg').value='';
+  document.getElementById('editingProjectId').value = '';
+  ['aProjTitle', 'aProjDesc', 'aProjTech', 'aProjDemo', 'aProjGit'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('aProjImg').value = '';
 }
 
 // — Legislations —
 function saveLegislation() {
-  const editId=document.getElementById('editingLegId').value;
-  const title=document.getElementById('aLegTitle').value.trim();
-  if(!title){showToast('Enter a title.');return;}
-  const leg={id:editId?+editId:Date.now(),category:document.getElementById('aLegCategory')?.value||'senate',name:title,title:document.getElementById('aLegDesc').value.trim(),authors:document.getElementById('aLegAuthors').value.trim(),date:document.getElementById('aLegDate')?.value.trim()||'',link:document.getElementById('aLegLink').value.trim()};
-  if(editId){const i=appData.legislations.findIndex(l=>l.id===+editId);if(i!==-1)appData.legislations[i]=leg;}
+  const editId = document.getElementById('editingLegId').value;
+  const title = document.getElementById('aLegTitle').value.trim();
+  if (!title) { showToast('Enter a title.'); return; }
+  const leg = { id: editId ? +editId : Date.now(), category: document.getElementById('aLegCategory')?.value || 'senate', name: title, title: document.getElementById('aLegDesc').value.trim(), authors: document.getElementById('aLegAuthors').value.trim(), date: document.getElementById('aLegDate')?.value.trim() || '', link: document.getElementById('aLegLink').value.trim() };
+  if (editId) { const i = appData.legislations.findIndex(l => l.id === +editId); if (i !== -1) appData.legislations[i] = leg; }
   else appData.legislations.push(leg);
-  renderLegislations();renderAdminLegislations();clearLegForm();showToast(editId?'Updated ✓':'Added ✓');
+  renderLegislations(); renderAdminLegislations(); clearLegForm(); showToast(editId ? 'Updated ✓' : 'Added ✓');
 }
-function editLegislation(id){
-  const l=appData.legislations.find(x=>x.id===id);if(!l)return;
-  document.getElementById('editingLegId').value=id;
-  document.getElementById('aLegTitle').value=l.name||l.title;
-  document.getElementById('aLegAuthors').value=l.authors;
-  document.getElementById('aLegDesc').value=l.title||l.desc||'';
-  const catEl=document.getElementById('aLegCategory'); if(catEl) catEl.value=l.category||'senate';
-  const dateEl=document.getElementById('aLegDate'); if(dateEl) dateEl.value=l.date||'';
-  document.getElementById('aLegLink').value=l.link||'';
+function editLegislation(id) {
+  const l = appData.legislations.find(x => x.id === id); if (!l) return;
+  document.getElementById('editingLegId').value = id;
+  document.getElementById('aLegTitle').value = l.name || l.title;
+  document.getElementById('aLegAuthors').value = l.authors;
+  document.getElementById('aLegDesc').value = l.title || l.desc || '';
+  const catEl = document.getElementById('aLegCategory'); if (catEl) catEl.value = l.category || 'senate';
+  const dateEl = document.getElementById('aLegDate'); if (dateEl) dateEl.value = l.date || '';
+  document.getElementById('aLegLink').value = l.link || '';
   showToast('Editing legislation...');
 }
-function deleteLegislation(id){
-  if(!confirm('Delete?'))return;
-  appData.legislations=appData.legislations.filter(l=>l.id!==id);
-  renderLegislations();renderAdminLegislations();showToast('Deleted.');
+function deleteLegislation(id) {
+  if (!confirm('Delete?')) return;
+  appData.legislations = appData.legislations.filter(l => l.id !== id);
+  renderLegislations(); renderAdminLegislations(); showToast('Deleted.');
 }
-function clearLegForm(){
-  document.getElementById('editingLegId').value='';
-  ['aLegTitle','aLegAuthors','aLegDesc','aLegLink','aLegDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  const catEl=document.getElementById('aLegCategory'); if(catEl) catEl.value='senate';
+function clearLegForm() {
+  document.getElementById('editingLegId').value = '';
+  ['aLegTitle', 'aLegAuthors', 'aLegDesc', 'aLegLink', 'aLegDate'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const catEl = document.getElementById('aLegCategory'); if (catEl) catEl.value = 'senate';
 }
 
 // — Personal & media —
-function savePersonal(){
+function savePersonal() {
   const name = document.getElementById('aName').value;
   const homeH1 = document.querySelector('.home-h1');
   const heroName = document.querySelector('.hero-name-badge strong');
@@ -214,43 +302,61 @@ function savePersonal(){
   if (ftLogo) ftLogo.textContent = name;
   showToast('Saved ✓');
 }
-function saveResume(){
-  const f=document.getElementById('aResume').files[0];
-  if(!f){showToast('No file selected.');return;}
-  const r=new FileReader();
-  r.onload=e=>{appData.resumeB64=e.target.result.split(',')[1];showToast('Resume updated ✓');};
+function saveResume() {
+  const f = document.getElementById('aResume').files[0];
+  if (!f) { showToast('No file selected.'); return; }
+  const r = new FileReader();
+  r.onload = e => { appData.resumeB64 = e.target.result.split(',')[1]; showToast('Resume updated ✓'); };
   r.readAsDataURL(f);
 }
-function savePhotos(){
-  const h=document.getElementById('aHeroPhoto').files[0];
-  const p=document.getElementById('aProfilePhoto').files[0];
-  const heroImg=document.getElementById('heroImg');
-  const profileImg=document.getElementById('profileImg');
-  if(h && heroImg){const r=new FileReader();r.onload=e=>{heroImg.src=e.target.result;showToast('Hero updated ✓');};r.readAsDataURL(h);}
-  if(p && profileImg){const r=new FileReader();r.onload=e=>{profileImg.src=e.target.result;showToast('Profile updated ✓');};r.readAsDataURL(p);}
+function savePhotos() {
+  const h = document.getElementById('aHeroPhoto').files[0];
+  const p = document.getElementById('aProfilePhoto').files[0];
+  const heroImg = document.getElementById('heroImg');
+  const profileImg = document.getElementById('profileImg');
+  if (h && heroImg) { const r = new FileReader(); r.onload = e => { heroImg.src = e.target.result; showToast('Hero updated ✓'); }; r.readAsDataURL(h); }
+  if (p && profileImg) { const r = new FileReader(); r.onload = e => { profileImg.src = e.target.result; showToast('Profile updated ✓'); }; r.readAsDataURL(p); }
 }
 
 // ══════════════════════════════════════════════
 //  UI HELPERS
 // ══════════════════════════════════════════════
 function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
-function toggleMobile(){ document.getElementById('mobileMenu').classList.toggle('open'); }
-window.addEventListener('scroll',()=>{ document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>20); });
+
+function toggleMobile() { 
+  const el = document.getElementById('mobileMenu');
+  if (el) el.classList.toggle('open'); 
+}
+
+window.addEventListener('scroll', () => { 
+  const nav = document.getElementById('navbar') || document.querySelector('nav');
+  if (nav) nav.classList.toggle('scrolled', window.scrollY > 20); 
+});
 
 function observeReveal() {
-  const obs=new IntersectionObserver((entries)=>{
-    entries.forEach((e,i)=>{
-      if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*60);obs.unobserve(e.target);}
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 60);
+        obs.unobserve(e.target);
+      }
     });
-  },{threshold:0.1});
-  document.querySelectorAll('.reveal:not(.visible)').forEach(el=>obs.observe(el));
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el => obs.observe(el));
 }
-function animateSkillBars(){
-  document.querySelectorAll('.bar-fill').forEach(b=>{b.style.width=b.dataset.w+'%';});
+
+function animateSkillBars() {
+  document.querySelectorAll('.bar-fill').forEach(b => { b.style.width = b.dataset.w + '%'; });
 }
 
 function initSkillBars() {
@@ -285,7 +391,7 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
-(function init(){
+(function init() {
   setActiveNav();
   const page = getCurrentPage();
   if (page === 'profile') { initSkillBars(); renderCerts(); }
