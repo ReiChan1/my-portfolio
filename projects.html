@@ -215,6 +215,13 @@
     }
   });
 </script>
-
+<!-- LIGHTBOX MODAL FOR PHOTOGRAPHY -->
+<div id="lightboxModal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 20px;" onclick="closeLightbox(event)">
+  <button onclick="closeLightbox(event)" style="position: absolute; top: 20px; right: 24px; background: transparent; border: none; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; z-index: 10000;">✕</button>
+  <div style="max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+    <img id="lightboxImg" src="" alt="Full Resolution" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <h3 id="lightboxCaption" style="color: #fff; margin-top: 16px; font-size: 1.1rem; text-align: center; font-weight: 500;"></h3>
+  </div>
+</div>
 </body>
 </html>
