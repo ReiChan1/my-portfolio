@@ -71,7 +71,7 @@
     <div class="ft-tag">Designed and Developed with Passion ✦</div>
   </div>
   <div class="ft-socials">
-    <a href="https://www.linkedin.com/in/acilo-rachel-p" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+    <a href="https://www.linkedin.com/in/acilo-rachel-p" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 0-4 0v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
     <a href="https://www.instagram.com/rei_chan_1/" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
     <a href="https://www.facebook.com/acilorachel.p/" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
     <a href="https://github.com/ReiChan1" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.773.003 1.55.105 2.275.307 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg></a>
@@ -177,34 +177,20 @@
 <script src="/js/main.js"></script>
 
 <!-- GALLERY TOGGLE AND PHOTOGRAPHY SCRIPT -->
-<script>
-  // 1. Photography Data Array (Images, Date Taken, Edited in Lightroom)
-  const photographyData = [
-    {
-      id: 1,
-      title: "Urban Architecture",
-      img: "/images/photos/photo1.jpg",
-      dateTaken: "March 15, 2026",
-      editedIn: "Lightroom Mobile"
-    },
-    {
-      id: 2,
-      title: "Golden Hour Perspective",
-      img: "/images/photos/photo2.jpg",
-      dateTaken: "April 02, 2026",
-      editedIn: "Lightroom Classic"
-    }
-  ];
+<script type="module">
+  // 1. Import photos from photos.js
+  // Note: Adjust relative path './photos.js' or './js/photos.js' based on actual folder structure
+  import { photos } from './photos.js';
 
   // 2. Render Photography Cards Function
   function renderPhotography() {
     const photoGrid = document.getElementById('photographyGrid');
     if (!photoGrid) return;
 
-    photoGrid.innerHTML = photographyData.map(photo => `
+    photoGrid.innerHTML = photos.map(photo => `
       <div class="project-card reveal" style="display: flex; flex-direction: column; overflow: hidden;">
         <div style="width: 100%; aspect-ratio: 4/3; overflow: hidden; background: var(--card-bg, #1a1a1a); border-radius: 8px; margin-bottom: 12px;">
-          <img src="${photo.img}" alt="${photo.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+          <img src="${photo.imageUrl}" alt="${photo.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
         </div>
         <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">${photo.title}</h3>
         <div style="font-size: 0.85rem; color: var(--text-muted, #a0a0a0); display: flex; flex-direction: column; gap: 4px;">
@@ -213,12 +199,16 @@
         </div>
       </div>
     `).join('');
+
+    if (typeof observeReveal === 'function') {
+      observeReveal();
+    }
   }
 
   // 3. Toggle View Logic
   let showingPhotos = false;
 
-  function toggleProjectsView() {
+  window.toggleProjectsView = function() {
     const projectsGrid = document.getElementById('projectsGrid');
     const photoGrid = document.getElementById('photographyGrid');
     const title = document.getElementById('projectsTitle');
@@ -240,7 +230,7 @@
       title.textContent = "My Projects";
       btn.textContent = "Go to Photographs 📸";
     }
-  }
+  };
 
   // Initial Render on Load
   document.addEventListener('DOMContentLoaded', () => {
