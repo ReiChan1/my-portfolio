@@ -3,10 +3,10 @@
 const photographyData = [
   {
     id: 1,
-    title: "Urban Architecture",
+    title: "Creative Shot - Graduation",
     img: "images/photographs/photo1.jpg",
-    dateTaken: "March 15, 2026",
-    editedIn: "Lightroom Mobile"
+    dateTaken: "July 23, 2026",
+    editedIn: "Lightroom Classic"
   }
 ];
 
