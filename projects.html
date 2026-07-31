@@ -44,7 +44,7 @@
     <!-- Section Header with Header Toggle Button -->
     <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
       <div>
-        <p class="s-eyebrow reveal" id="projectsEyebrow">--- What I've built</p>
+        <p class="s-eyebrow reveal" id="projectsEyebrow"> What I've built</p>
         <h2 class="s-title reveal" id="projectsTitle" style="margin-bottom: 0;">My Projects</h2>
       </div>
 
@@ -230,13 +230,13 @@
     if (showingPhotos) {
       projectsGrid.style.display = 'none';
       photoGrid.style.display = 'grid';
-      eyebrow.textContent = "--- Shot & Edited by Me";
+      eyebrow.textContent = "Shot & Edited by Me";
       title.textContent = "Photography Gallery";
       btn.textContent = "Back to Projects 💻";
     } else {
       projectsGrid.style.display = 'grid';
       photoGrid.style.display = 'none';
-      eyebrow.textContent = "--- What I've built";
+      eyebrow.textContent = "What I've built";
       title.textContent = "My Projects";
       btn.textContent = "Go to Photographs 📸";
     }
