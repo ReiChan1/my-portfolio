@@ -5,7 +5,7 @@ const photographyData = [
   {
     id: 1,
     title: "Urban Architecture",
-    img: "images/photo1.jpg", // Replace with your exact image path
+    img: "my-portfolio/images/photo1.jpg", // Replace with your exact image path
     dateTaken: "March 15, 2026",
     editedIn: "Lightroom Mobile"
   },
