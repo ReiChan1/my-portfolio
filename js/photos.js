@@ -1,16 +1,38 @@
-export const photos = [
+// js/photos.js
+
+// Array of photography items
+const photographyData = [
   {
     id: 1,
-    title: "Sample Photo 1",
-    imageUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb", // Replace with your image link or path
+    title: "Urban Architecture",
+    img: "assets/images/photo1.jpg", // Replace with your exact image path
     dateTaken: "March 15, 2026",
-    editedIn: "Lightroom Classic"
+    editedIn: "Lightroom Mobile"
   },
   {
     id: 2,
-    title: "Sample Photo 2",
-    imageUrl: "https://images.unsplash.com/photo-1511884642898-4c92249e20b6", // Replace with your image link or path
+    title: "Golden Hour Perspective",
+    img: "assets/images/photo2.jpg", // Replace with your exact image path
     dateTaken: "April 02, 2026",
     editedIn: "Lightroom Classic"
   }
 ];
+
+// Function that renders photography cards into #photographyGrid
+function renderPhotography() {
+  const photoGrid = document.getElementById('photographyGrid');
+  if (!photoGrid) return;
+
+  photoGrid.innerHTML = photographyData.map(photo => `
+    <div class="project-card reveal" style="display: flex; flex-direction: column; overflow: hidden;">
+      <div style="width: 100%; aspect-ratio: 4/3; overflow: hidden; background: var(--card-bg, #1a1a1a); border-radius: 8px; margin-bottom: 12px;">
+        <img src="${photo.img}" alt="${photo.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      </div>
+      <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">${photo.title}</h3>
+      <div style="font-size: 0.85rem; color: var(--text-muted, #a0a0a0); display: flex; flex-direction: column; gap: 4px;">
+        <p><strong>Date Taken:</strong> ${photo.dateTaken}</p>
+        <p><strong>Edited in:</strong> ${photo.editedIn}</p>
+      </div>
+    </div>
+  `).join('');
+}
