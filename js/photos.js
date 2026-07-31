@@ -3,10 +3,10 @@
 const photographyData = [
   {
     id: 1,
-    title: "Creative Shot - Graduation",
-    img: "images/photographs/photo1.jpg",
-    dateTaken: "July 23, 2026",
-    editedIn: "Lightroom Classic"
+    title: "Urban Architecture",
+    img: "images/photo1.jpg",
+    dateTaken: "March 15, 2026",
+    editedIn: "Lightroom Mobile"
   }
 ];
 
@@ -16,11 +16,17 @@ function renderPhotography() {
 
   photoGrid.innerHTML = photographyData.map(photo => `
     <div class="project-card reveal" style="display: flex; flex-direction: column; opacity: 1; visibility: visible;">
-      <div style="width: 100%; height: 260px; overflow: hidden; background: #1a1a1a; border-radius: 8px; margin-bottom: 12px; position: relative;">
+      <div 
+        onclick="openLightbox('${photo.img}', '${photo.title}')"
+        style="width: 100%; height: 260px; overflow: hidden; background: #1a1a1a; border-radius: 8px; margin-bottom: 12px; position: relative; cursor: pointer;"
+        title="Click to view full image"
+      >
         <img 
           src="${photo.img}" 
           alt="${photo.title}" 
-          style="width: 100%; height: 100%; object-fit: cover; display: block;" 
+          style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease;" 
+          onmouseover="this.style.transform='scale(1.05)'" 
+          onmouseout="this.style.transform='scale(1)'"
           onerror="console.error('Failed to load image:', this.src); this.style.display='none';"
         >
       </div>
@@ -33,6 +39,38 @@ function renderPhotography() {
   `).join('');
 }
 
+// Lightbox functions
+function openLightbox(imgSrc, caption) {
+  const modal = document.getElementById('lightboxModal');
+  const modalImg = document.getElementById('lightboxImg');
+  const modalCaption = document.getElementById('lightboxCaption');
+
+  if (!modal || !modalImg) return;
+
+  modalImg.src = imgSrc;
+  if (modalCaption) modalCaption.textContent = caption || '';
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function closeLightbox(event) {
+  // Close if close button clicked, Esc key pressed, or outside background clicked
+  const modal = document.getElementById('lightboxModal');
+  if (!modal) return;
+
+  if (!event || event.target.id === 'lightboxModal' || event.target.tagName === 'BUTTON' || event.key === 'Escape') {
+    modal.style.display = 'none';
+    document.body.style.overflow = ''; // Restore background scrolling
+  }
+}
+
+// Close lightbox on 'Escape' key press
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox(e);
+});
+
+// Render on load
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', renderPhotography);
 } else {
