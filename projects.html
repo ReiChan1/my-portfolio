@@ -7,7 +7,7 @@
 <title>Projects & Photography — Rachel Palisoc Acilo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Fraunces:ital,wght@1,300;1,600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div class="toast" id="toast"></div>
@@ -18,7 +18,7 @@
   <ul class="nav-links">
     <li><a data-page="home" href="index.html">Home</a></li>
     <li><a data-page="profile" href="profile.html">Profile</a></li>
-    <li><a data-page="projects" href="projects.html">Projects</a></li>
+    <li><a data-page="projects" href="projects.html" class="active">Projects</a></li>
     <li><a data-page="legislations" href="legislations.html">Legislations</a></li>
     <li><a data-page="social" href="social.html">Social</a></li>
   </ul>
@@ -57,7 +57,7 @@
     <!-- 1. PROJECTS GRID (Default View) -->
     <div class="projects-grid" id="projectsGrid"></div>
 
-    <!-- 2. PHOTOGRAPHY GRID (Hidden View) -->
+    <!-- 2. PHOTOGRAPHY GRID (Hidden View by default) -->
     <div class="projects-grid" id="photographyGrid" style="display: none;"></div>
 
   </div></div>
@@ -173,49 +173,12 @@
 </div>
 
 <!-- DATA & SCRIPT INTEGRATION -->
-<script src="/js/data.js"></script>
-<script src="/js/main.js"></script>
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script src="js/photos.js"></script>
 
-<!-- GALLERY TOGGLE AND PHOTOGRAPHY SCRIPT -->
+<!-- GALLERY TOGGLE CONTROL SCRIPT -->
 <script>
-  // 1. Photography Data Array (Images, Date Taken, Edited in Lightroom)
-  const photographyData = [
-    {
-      id: 1,
-      title: "Urban Architecture",
-      img: "/images/photos/photo1.jpg",
-      dateTaken: "March 15, 2026",
-      editedIn: "Lightroom Mobile"
-    },
-    {
-      id: 2,
-      title: "Golden Hour Perspective",
-      img: "/images/photos/photo2.jpg",
-      dateTaken: "April 02, 2026",
-      editedIn: "Lightroom Classic"
-    }
-  ];
-
-  // 2. Render Photography Cards Function
-  function renderPhotography() {
-    const photoGrid = document.getElementById('photographyGrid');
-    if (!photoGrid) return;
-
-    photoGrid.innerHTML = photographyData.map(photo => `
-      <div class="project-card reveal" style="display: flex; flex-direction: column; overflow: hidden;">
-        <div style="width: 100%; aspect-ratio: 4/3; overflow: hidden; background: var(--card-bg, #1a1a1a); border-radius: 8px; margin-bottom: 12px;">
-          <img src="${photo.img}" alt="${photo.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        </div>
-        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">${photo.title}</h3>
-        <div style="font-size: 0.85rem; color: var(--text-muted, #a0a0a0); display: flex; flex-direction: column; gap: 4px;">
-          <p><strong>Date Taken:</strong> ${photo.dateTaken}</p>
-          <p><strong>Edited in:</strong> ${photo.editedIn}</p>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // 3. Toggle View Logic
   let showingPhotos = false;
 
   function toggleProjectsView() {
@@ -233,6 +196,11 @@
       eyebrow.textContent = "--- Shot & Edited by Me";
       title.textContent = "Photography Gallery";
       btn.textContent = "Back to Projects 💻";
+
+      // Render photos dynamically from photos.js if available
+      if (typeof renderPhotography === 'function') {
+        renderPhotography();
+      }
     } else {
       projectsGrid.style.display = 'grid';
       photoGrid.style.display = 'none';
@@ -242,9 +210,11 @@
     }
   }
 
-  // Initial Render on Load
   document.addEventListener('DOMContentLoaded', () => {
-    renderPhotography();
+    // Initial render call on page load
+    if (typeof renderPhotography === 'function') {
+      renderPhotography();
+    }
   });
 </script>
 
