@@ -6,6 +6,7 @@ const photographyData = [
     title: "Creative Shot - Graduation01",
     img: "images/photographs/photo1.jpg",
     dateTaken: "July 23, 2026",
+    shotWith: "Sony A6400",
     editedIn: "Lightroom Classic"
   },
   {
@@ -13,15 +14,17 @@ const photographyData = [
     title: "Creative Shot - Graduation02",
     img: "images/photographs/photo2.jpg",
     dateTaken: "July 23, 2026",
+    shotWith: "Sony A6400",
     editedIn: "Lightroom Classic"
   },
-{
+  {
     id: 3,
     title: "Creative Shot - Graduation03",
     img: "images/photographs/photo3.jpg",
     dateTaken: "July 23, 2026",
+    shotWith: "Sony A6400",
     editedIn: "Lightroom Classic"
-  },
+  }
 ];
 
 function renderPhotography() {
@@ -47,6 +50,7 @@ function renderPhotography() {
       <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">${photo.title}</h3>
       <div style="font-size: 0.85rem; color: #a0a0a0; display: flex; flex-direction: column; gap: 4px;">
         <p><strong>Date Taken:</strong> ${photo.dateTaken}</p>
+        ${photo.shotWith ? `<p><strong>Shot with:</strong> ${photo.shotWith}</p>` : ''}
         <p><strong>Edited in:</strong> ${photo.editedIn}</p>
       </div>
     </div>
@@ -65,26 +69,23 @@ function openLightbox(imgSrc, caption) {
   if (modalCaption) modalCaption.textContent = caption || '';
 
   modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  document.body.style.overflow = 'hidden';
 }
 
 function closeLightbox(event) {
-  // Close if close button clicked, Esc key pressed, or outside background clicked
   const modal = document.getElementById('lightboxModal');
   if (!modal) return;
 
   if (!event || event.target.id === 'lightboxModal' || event.target.tagName === 'BUTTON' || event.key === 'Escape') {
     modal.style.display = 'none';
-    document.body.style.overflow = ''; // Restore background scrolling
+    document.body.style.overflow = '';
   }
 }
 
-// Close lightbox on 'Escape' key press
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeLightbox(e);
 });
 
-// Render on load
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', renderPhotography);
 } else {
