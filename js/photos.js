@@ -1,20 +1,21 @@
 // js/photos.js
 
-// Array of photography items
 const photographyData = [
   {
     id: 1,
     title: "Urban Architecture",
-    img: "my-portfolio/images/photo1.jpg", // Replace with your exact image path
+    img: "images/photo1.jpg", // FIXED: Removed 'my-portfolio/' prefix
     dateTaken: "March 15, 2026",
     editedIn: "Lightroom Mobile"
-  },
+  }
 ];
 
-// Function that renders photography cards into #photographyGrid
 function renderPhotography() {
   const photoGrid = document.getElementById('photographyGrid');
-  if (!photoGrid) return;
+  if (!photoGrid) {
+    console.warn("photographyGrid element not found!");
+    return;
+  }
 
   photoGrid.innerHTML = photographyData.map(photo => `
     <div class="project-card reveal" style="display: flex; flex-direction: column; overflow: hidden;">
@@ -28,4 +29,11 @@ function renderPhotography() {
       </div>
     </div>
   `).join('');
+}
+
+// Automatically render whenever DOM or script is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderPhotography);
+} else {
+  renderPhotography();
 }
