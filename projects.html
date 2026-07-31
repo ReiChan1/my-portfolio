@@ -4,14 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="index, follow">
-<title>Projects & Photography — Rachel Palisoc Acilo</title>
+<title>Projects — Rachel Palisoc Acilo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Fraunces:ital,wght@1,300;1,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <div class="toast" id="toast"></div>
-
 <!-- NAV -->
 <nav id="navbar">
   <a class="nav-logo" href="index.html">rachel.acilo</a>
@@ -26,7 +25,6 @@
     <span></span><span></span><span></span>
   </button>
 </nav>
-
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
   <button class="mobile-close" onclick="toggleMobile()">✕</button>
@@ -36,33 +34,14 @@
   <a href="legislations.html" onclick="toggleMobile()">Legislations</a>
   <a href="social.html" onclick="toggleMobile()">Social</a>
 </div>
-
-<!-- PROJECTS & PHOTOGRAPHY SECTION -->
+<!-- PROJECTS -->
 <section id="section-projects" class="page-section active">
   <div class="page-wrap"><div class="section-inner">
-    
-    <!-- Section Header with Header Toggle Button -->
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
-      <div>
-        <p class="s-eyebrow reveal" id="projectsEyebrow"> What I've built</p>
-        <h2 class="s-title reveal" id="projectsTitle" style="margin-bottom: 0;">My Projects</h2>
-      </div>
-
-      <!-- Upper Right Toggle Button -->
-      <button class="admin-btn reveal" id="galleryToggleBtn" onclick="toggleProjectsView()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
-        Go to Photographs 📸
-      </button>
-    </div>
-
-    <!-- 1. PROJECTS GRID (Default View) -->
+    <p class="s-eyebrow reveal">What I've built</p>
+    <h2 class="s-title reveal">My Projects</h2>
     <div class="projects-grid" id="projectsGrid"></div>
-
-    <!-- 2. PHOTOGRAPHY GRID (Hidden View) -->
-    <div class="projects-grid" id="photographyGrid" style="display: none;"></div>
-
   </div></div>
 </section>
-
 <!-- FOOTER -->
 <footer>
   <div>
@@ -77,7 +56,6 @@
     <a href="https://github.com/ReiChan1" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.773.003 1.55.105 2.275.307 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg></a>
   </div>
 </footer>
-
 <!-- ADMIN LOGIN MODAL -->
 <div id="adminLoginModal">
   <div class="login-box">
@@ -171,82 +149,7 @@
     </div>
   </div>
 </div>
-
-<!-- DATA & SCRIPT INTEGRATION -->
 <script src="/js/data.js"></script>
 <script src="/js/main.js"></script>
-
-<!-- GALLERY TOGGLE AND PHOTOGRAPHY SCRIPT -->
-<script>
-  // 1. Photography Data Array (Images, Date Taken, Edited in Lightroom)
-  const photographyData = [
-    {
-      id: 1,
-      title: "Urban Architecture",
-      img: "/images/photos/photo1.jpg",
-      dateTaken: "March 15, 2026",
-      editedIn: "Lightroom Mobile"
-    },
-    {
-      id: 2,
-      title: "Golden Hour Perspective",
-      img: "/images/photos/photo2.jpg",
-      dateTaken: "April 02, 2026",
-      editedIn: "Lightroom Classic"
-    }
-  ];
-
-  // 2. Render Photography Cards Function
-  function renderPhotography() {
-    const photoGrid = document.getElementById('photographyGrid');
-    if (!photoGrid) return;
-
-    photoGrid.innerHTML = photographyData.map(photo => `
-      <div class="project-card reveal" style="display: flex; flex-direction: column; overflow: hidden;">
-        <div style="width: 100%; aspect-ratio: 4/3; overflow: hidden; background: var(--card-bg, #1a1a1a); border-radius: 8px; margin-bottom: 12px;">
-          <img src="${photo.img}" alt="${photo.title}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        </div>
-        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;">${photo.title}</h3>
-        <div style="font-size: 0.85rem; color: var(--text-muted, #a0a0a0); display: flex; flex-direction: column; gap: 4px;">
-          <p><strong>Date Taken:</strong> ${photo.dateTaken}</p>
-          <p><strong>Edited in:</strong> ${photo.editedIn}</p>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // 3. Toggle View Logic
-  let showingPhotos = false;
-
-  function toggleProjectsView() {
-    const projectsGrid = document.getElementById('projectsGrid');
-    const photoGrid = document.getElementById('photographyGrid');
-    const title = document.getElementById('projectsTitle');
-    const eyebrow = document.getElementById('projectsEyebrow');
-    const btn = document.getElementById('galleryToggleBtn');
-
-    showingPhotos = !showingPhotos;
-
-    if (showingPhotos) {
-      projectsGrid.style.display = 'none';
-      photoGrid.style.display = 'grid';
-      eyebrow.textContent = "Shot & Edited by Me";
-      title.textContent = "Photography Gallery";
-      btn.textContent = "Back to Projects 💻";
-    } else {
-      projectsGrid.style.display = 'grid';
-      photoGrid.style.display = 'none';
-      eyebrow.textContent = "What I've built";
-      title.textContent = "My Projects";
-      btn.textContent = "Go to Photographs 📸";
-    }
-  }
-
-  // Initial Render on Load
-  document.addEventListener('DOMContentLoaded', () => {
-    renderPhotography();
-  });
-</script>
-
 </body>
 </html>
