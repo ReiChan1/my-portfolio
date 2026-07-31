@@ -4,7 +4,7 @@ const photographyData = [
   {
     id: 1,
     title: "Urban Architecture",
-    img: "images/photo1.jpg",
+    img: "images/photographs/photo1.jpg",
     dateTaken: "March 15, 2026",
     editedIn: "Lightroom Mobile"
   }
