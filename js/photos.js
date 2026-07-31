@@ -9,13 +9,6 @@ const photographyData = [
     dateTaken: "March 15, 2026",
     editedIn: "Lightroom Mobile"
   },
-  {
-    id: 2,
-    title: "Golden Hour Perspective",
-    img: "assets/images/photo2.jpg", // Replace with your exact image path
-    dateTaken: "April 02, 2026",
-    editedIn: "Lightroom Classic"
-  }
 ];
 
 // Function that renders photography cards into #photographyGrid
