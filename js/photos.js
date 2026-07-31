@@ -3,8 +3,22 @@
 const photographyData = [
   {
     id: 1,
-    title: "Creative Shot - Graduation",
+    title: "Creative Shot - Graduation01",
     img: "images/photographs/photo1.jpg",
+    dateTaken: "July 23, 2026",
+    editedIn: "Lightroom Classic"
+  }
+  {
+    id: 2,
+    title: "Creative Shot - Graduation02",
+    img: "images/photographs/photo2.jpg",
+    dateTaken: "July 23, 2026",
+    editedIn: "Lightroom Classic"
+  }
+{
+    id: 3,
+    title: "Creative Shot - Graduation03",
+    img: "images/photographs/photo3.jpg",
     dateTaken: "July 23, 2026",
     editedIn: "Lightroom Classic"
   }
