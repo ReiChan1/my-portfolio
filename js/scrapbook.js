@@ -3,6 +3,7 @@
 
 let sbCurrent = 0;
 let sbSpreads = [];
+let sbAnimating = false;
 
 function sbBuildSpreads(photos) {
   const spreads = [];
@@ -59,6 +60,7 @@ function renderPhotography() {
   const photos = (typeof photographyData !== 'undefined') ? photographyData : [];
   sbSpreads = sbBuildSpreads(photos);
   sbCurrent = 0;
+  sbAnimating = false;
 
   container.className = '';
   container.innerHTML = `
@@ -83,24 +85,16 @@ function renderPhotography() {
     `<span data-i="${i}" onclick="sbGo(${i})"></span>`
   ).join('');
 
-  sbApplyState(0);
+  // First spread just appears, no animation needed.
+  const spreadEls = document.querySelectorAll('#sbViewport .sb-spread');
+  spreadEls.forEach((el, i) => el.classList.toggle('sb-active', i === 0));
+
+  sbUpdateDotsAndButtons();
   sbSyncHeight();
   window.addEventListener('resize', sbSyncHeight);
 }
 
-function sbApplyState(dir) {
-  const spreadEls = document.querySelectorAll('#sbViewport .sb-spread');
-  spreadEls.forEach((el, i) => {
-    el.classList.remove('sb-active', 'sb-enter-next', 'sb-enter-prev');
-    if (i === sbCurrent) {
-      el.classList.add('sb-active');
-    } else if (dir > 0 && i > sbCurrent) {
-      el.classList.add('sb-enter-next');
-    } else if (dir < 0 && i < sbCurrent) {
-      el.classList.add('sb-enter-prev');
-    }
-  });
-
+function sbUpdateDotsAndButtons() {
   const dotEls = document.querySelectorAll('#sbDots span');
   dotEls.forEach((d, i) => d.classList.toggle('sb-dot-active', i === sbCurrent));
 
@@ -110,11 +104,46 @@ function sbApplyState(dir) {
   if (nextBtn) nextBtn.disabled = sbCurrent === sbSpreads.length - 1;
 }
 
+const SB_FLIP_MS = 700;
+
 function sbGo(index) {
-  if (index < 0 || index >= sbSpreads.length || index === sbCurrent) return;
+  if (index < 0 || index >= sbSpreads.length || index === sbCurrent || sbAnimating) return;
+
   const dir = index > sbCurrent ? 1 : -1;
+  const spreadEls = document.querySelectorAll('#sbViewport .sb-spread');
+  const outgoing = spreadEls[sbCurrent];
+  const incoming = spreadEls[index];
+  const viewport = document.getElementById('sbViewport');
+  if (!outgoing || !incoming || !viewport) return;
+
+  sbAnimating = true;
+  viewport.classList.add('sb-flipping');
+
+  // Position the incoming page on the far side, instantly (no transition),
+  // so it's ready to rotate in from "behind" the book.
+  incoming.classList.remove('sb-active');
+  incoming.classList.add(dir > 0 ? 'sb-flip-in-start-next' : 'sb-flip-in-start-prev');
+  void incoming.offsetWidth; // force reflow so the "instant" position registers
+
+  // Start the outgoing page turning away.
+  outgoing.classList.remove('sb-active');
+  outgoing.classList.add(dir > 0 ? 'sb-flip-out-next' : 'sb-flip-out-prev');
+
+  requestAnimationFrame(() => {
+    incoming.classList.remove('sb-flip-in-start-next', 'sb-flip-in-start-prev');
+    incoming.classList.add('sb-active');
+  });
+
   sbCurrent = index;
-  sbApplyState(dir);
+  sbUpdateDotsAndButtons();
+
+  setTimeout(() => {
+    outgoing.classList.remove('sb-flip-out-next', 'sb-flip-out-prev');
+    viewport.classList.remove('sb-flipping');
+    sbAnimating = false;
+    sbSyncHeight();
+  }, SB_FLIP_MS);
+
   sbSyncHeight();
 }
 
