@@ -1,61 +1,228 @@
-// js/photos.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="index, follow">
+  <title>Projects & Photography — Rachel Palisoc Acilo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Fraunces:ital,wght@1,300;1,600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="toast" id="toast"></div>
 
-const photographyData = [
-  {
-    id: 1,
-    title: "Creative Shot - Graduation01",
-    img: "images/photographs/photo1.jpg",
-    dateTaken: "July 23, 2026",
-    shotWith: "Sony A6400",
-    editedIn: "Lightroom Classic"
-  },
-  {
-    id: 2,
-    title: "Creative Shot - Graduation02",
-    img: "images/photographs/photo2.jpg",
-    dateTaken: "July 23, 2026",
-    shotWith: "Sony A6400",
-    editedIn: "Lightroom Classic"
-  },
-  {
-    id: 3,
-    title: "Creative Shot - Graduation03",
-    img: "images/photographs/photo3.jpg",
-    dateTaken: "July 23, 2026",
-    shotWith: "Sony A6400",
-    editedIn: "Lightroom Classic"
+<!-- NAV -->
+<nav id="navbar">
+  <a class="nav-logo" href="index.html">rachel.acilo</a>
+  <ul class="nav-links">
+    <li><a data-page="home" href="index.html">Home</a></li>
+    <li><a data-page="profile" href="profile.html">Profile</a></li>
+    <li><a data-page="projects" href="projects.html" class="active">Projects</a></li>
+    <li><a data-page="legislations" href="legislations.html">Legislations</a></li>
+    <li><a data-page="social" href="social.html">Social</a></li>
+  </ul>
+  <button class="nav-hamburger" onclick="toggleMobile()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" onclick="toggleMobile()">✕</button>
+  <a href="index.html" onclick="toggleMobile()">Home</a>
+  <a href="profile.html" onclick="toggleMobile()">Profile</a>
+  <a href="projects.html" onclick="toggleMobile()">Projects</a>
+  <a href="legislations.html" onclick="toggleMobile()">Legislations</a>
+  <a href="social.html" onclick="toggleMobile()">Social</a>
+</div>
+
+<!-- PROJECTS & PHOTOGRAPHY SECTION -->
+<section id="section-projects" class="page-section active">
+  <div class="page-wrap"><div class="section-inner">
+    
+    <!-- Section Header with Toggle Button -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+      <div>
+        <p class="s-eyebrow reveal" id="projectsEyebrow">What I've built</p>
+        <h2 class="s-title reveal" id="projectsTitle" style="margin-bottom: 0;">My Projects</h2>
+      </div>
+
+      <!-- Gallery Toggle Button -->
+      <button class="admin-btn reveal" id="galleryToggleBtn" onclick="toggleProjectsView()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+        Go to Photographs 📸
+      </button>
+    </div>
+
+    <!-- 1. PROJECTS GRID (Default View) -->
+    <div class="projects-grid" id="projectsGrid"></div>
+
+    <!-- 2. PHOTOGRAPHY GRID (Hidden View by default) -->
+    <div class="projects-grid" id="photographyGrid" style="display: none;"></div>
+
+  </div></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div>
+    <div class="ft-logo">Rachel Palisoc Acilo</div>
+    <div class="ft-copy">© 2026 All rights reserved.</div>
+    <div class="ft-tag">Designed and Developed with Passion ✦</div>
+  </div>
+  <div class="ft-socials">
+    <a href="https://www.linkedin.com/in/acilo-rachel-p" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+    <a href="https://www.instagram.com/rei_chan_1/" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+    <a href="https://www.facebook.com/acilorachel.p/" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+    <a href="https://github.com/ReiChan1" target="_blank" class="ft-soc"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.773.003 1.55.105 2.275.307 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg></a>
+  </div>
+</footer>
+
+<!-- ADMIN LOGIN MODAL -->
+<div id="adminLoginModal">
+  <div class="login-box">
+    <div class="login-logo">Admin Access</div>
+    <div class="login-sub">Enter your password to continue</div>
+    <input class="login-field" type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter')attemptLogin()">
+    <button class="login-btn" id="loginBtn" onclick="attemptLogin()">Login</button>
+    <div class="login-err" id="loginErr"></div>
+    <span class="login-cancel" onclick="closeLoginModal()">Cancel</span>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="admin-box">
+    <div class="admin-header">
+      <h2>Admin Panel</h2>
+      <div class="admin-header-right">
+        <button class="admin-logout" onclick="logoutAdmin()">Logout</button>
+        <button class="admin-close" onclick="closeAdmin()">✕</button>
+      </div>
+    </div>
+    <div class="admin-body">
+      <!-- Personal -->
+      <div class="admin-section">
+        <h3>Personal Info</h3>
+        <div class="form-row"><label>Full Name</label><input id="aName" value="Rachel Palisoc Acilo"></div>
+        <div class="form-row"><label>Tagline</label><input id="aTagline" value="IT Student · Data Strategist · Student Legislator"></div>
+        <div class="form-row"><label>Email</label><input id="aEmail" value="acilorachel.p@gmail.com"></div>
+        <div class="form-row"><label>Location</label><input id="aLocation" value="Cavite, Philippines"></div>
+        <button class="admin-btn" onclick="savePersonal()">Save</button>
+      </div>
+      <!-- Resume -->
+      <div class="admin-section">
+        <h3>Resume PDF</h3>
+        <div class="form-row"><label>Upload New Resume</label><input type="file" id="aResume" accept=".pdf"></div>
+        <button class="admin-btn" onclick="saveResume()">Update Resume</button>
+      </div>
+      <!-- Photos -->
+      <div class="admin-section">
+        <h3>Photos</h3>
+        <div class="form-row"><label>Hero Photo</label><input type="file" id="aHeroPhoto" accept="image/*"></div>
+        <div class="form-row"><label>Profile Card Photo</label><input type="file" id="aProfilePhoto" accept="image/*"></div>
+        <button class="admin-btn" onclick="savePhotos()">Update Photos</button>
+      </div>
+      <!-- Certs -->
+      <div class="admin-section">
+        <h3>Certifications</h3>
+        <div class="admin-list" id="adminCertList"></div>
+        <h4 style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brown);margin-bottom:10px;">Add / Edit</h4>
+        <input type="hidden" id="editingCertId">
+        <div class="form-row"><label>Certification Name</label><input id="aCertName" placeholder="e.g. CCNA: Switching, Routing &amp; Wireless"></div>
+        <div class="form-row"><label>Organization &amp; Date</label><input id="aCertOrg" placeholder="Cisco · Jul 2026"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="admin-btn" onclick="saveCert()">Save</button>
+          <button class="admin-btn secondary" onclick="clearCertForm()">Clear</button>
+        </div>
+      </div>
+      <!-- Projects -->
+      <div class="admin-section">
+        <h3>Projects</h3>
+        <div class="admin-list" id="adminProjectsList"></div>
+        <h4 style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brown);margin-bottom:10px;">Add / Edit</h4>
+        <input type="hidden" id="editingProjectId">
+        <div class="form-row"><label>Title</label><input id="aProjTitle" placeholder="Project name"></div>
+        <div class="form-row"><label>Description</label><textarea id="aProjDesc"></textarea></div>
+        <div class="form-row"><label>Tech Stack (comma-separated)</label><input id="aProjTech" placeholder="Python, SQL"></div>
+        <div class="form-row"><label>Live Demo URL</label><input id="aProjDemo" placeholder="https://..."></div>
+        <div class="form-row"><label>GitHub URL</label><input id="aProjGit" placeholder="https://github.com/..."></div>
+        <div class="form-row"><label>Project Image</label><input type="file" id="aProjImg" accept="image/*"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="admin-btn" onclick="saveProject()">Save</button>
+          <button class="admin-btn secondary" onclick="clearProjectForm()">Clear</button>
+        </div>
+      </div>
+      <!-- Legislations -->
+      <div class="admin-section">
+        <h3>Legislations</h3>
+        <div class="admin-list" id="adminLegislationsList"></div>
+        <h4 style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--brown);margin-bottom:10px;">Add / Edit</h4>
+        <input type="hidden" id="editingLegId">
+        <div class="form-row"><label>Title</label><input id="aLegTitle" placeholder="e.g. Senate Resolution No. 10"></div>
+        <div class="form-row"><label>Author(s)</label><input id="aLegAuthors" placeholder="Rachel Palisoc Acilo, et al."></div>
+        <div class="form-row"><label>Description</label><textarea id="aLegDesc"></textarea></div>
+        <div class="form-row"><label>Link (optional)</label><input id="aLegLink" placeholder="https://..."></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="admin-btn" onclick="saveLegislation()">Save</button>
+          <button class="admin-btn secondary" onclick="clearLegForm()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA & SCRIPT INTEGRATION -->
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script src="js/photos.js"></script>
+<script src="js/scrapbook.js"></script>
+
+<!-- GALLERY TOGGLE CONTROL SCRIPT -->
+<script>
+  let showingPhotos = false;
+
+  function toggleProjectsView() {
+    const projectsGrid = document.getElementById('projectsGrid');
+    const photoGrid = document.getElementById('photographyGrid');
+    const title = document.getElementById('projectsTitle');
+    const eyebrow = document.getElementById('projectsEyebrow');
+    const btn = document.getElementById('galleryToggleBtn');
+
+    showingPhotos = !showingPhotos;
+
+    if (showingPhotos) {
+      projectsGrid.style.display = 'none';
+      photoGrid.style.display = 'block';
+      eyebrow.textContent = "Shot & Edited by Me";
+      title.textContent = "Photography Gallery";
+      btn.textContent = "Back to Projects 💻";
+
+      if (typeof renderPhotography === 'function') {
+        renderPhotography();
+      }
+    } else {
+      projectsGrid.style.display = 'grid';
+      photoGrid.style.display = 'none';
+      eyebrow.textContent = "What I've built";
+      title.textContent = "My Projects";
+      btn.textContent = "Go to Photographs 📸";
+    }
   }
-];
 
-// NOTE: The photography grid is now rendered as a vintage flip-through
-// scrapbook — see js/scrapbook.js for renderPhotography()'s implementation.
-// This file just holds the photo data + the lightbox modal logic.
-
-// Lightbox functions
-function openLightbox(imgSrc, caption) {
-  const modal = document.getElementById('lightboxModal');
-  const modalImg = document.getElementById('lightboxImg');
-  const modalCaption = document.getElementById('lightboxCaption');
-
-  if (!modal || !modalImg) return;
-
-  modalImg.src = imgSrc;
-  if (modalCaption) modalCaption.textContent = caption || '';
-
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closeLightbox(event) {
-  const modal = document.getElementById('lightboxModal');
-  if (!modal) return;
-
-  if (!event || event.target.id === 'lightboxModal' || event.target.tagName === 'BUTTON' || event.key === 'Escape') {
-    modal.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-}
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeLightbox(e);
-});
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof renderPhotography === 'function') {
+      renderPhotography();
+    }
+  });
+</script>
+<!-- LIGHTBOX MODAL FOR PHOTOGRAPHY -->
+<div id="lightboxModal" style="display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 20px;" onclick="closeLightbox(event)">
+  <button onclick="closeLightbox(event)" style="position: absolute; top: 20px; right: 24px; background: transparent; border: none; color: #fff; font-size: 2rem; cursor: pointer; line-height: 1; z-index: 10000;">✕</button>
+  <div style="max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+    <img id="lightboxImg" src="" alt="Full Resolution" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <h3 id="lightboxCaption" style="color: #fff; margin-top: 16px; font-size: 1.1rem; text-align: center; font-weight: 500;"></h3>
+  </div>
+</div>
+</body>
+</html>
