@@ -28,12 +28,12 @@ function renderProjects() {
   if (!g) return;
   g.innerHTML = appData.projects.map(p => {
     const img = p.img ? `<img src="${p.img}" alt="${p.title}">` : `<div class="proj-img-ph"><span>💻</span><small>Project preview</small></div>`;
-    const techs = p.tech.map(t => `<span class="tech">${t}</span>`).join('');
+    const techs = (p.tech || []).map(t => `<span class="tech">${t}</span>`).join('');
     const demo = p.demo ? `<a href="${p.demo}" target="_blank" class="pb pb-dark">Live Demo</a>` : '';
     const gh = p.github ? `<a href="${p.github}" target="_blank" class="pb pb-ghost">GitHub</a>` : '';
     return `<div class="proj-card reveal"><div class="proj-img">${img}</div><div class="proj-body"><div class="proj-techs">${techs}</div><h3 class="proj-title">${p.title}</h3><p class="proj-desc">${p.desc}</p><div class="proj-actions">${demo}${gh}</div></div></div>`;
   }).join('');
-  
+
   // Admin-only add card
   g.innerHTML += `<div class="proj-card admin-only" style="border:2px dashed var(--tan);background:transparent;box-shadow:none;min-height:300px;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--tan);font-size:13px;font-style:italic;cursor:pointer;" onclick="requestAdmin()"><div style="font-size:32px;opacity:0.4;">+</div><span>Add project (Admin)</span></div>`;
   observeReveal();
@@ -85,7 +85,93 @@ function openResume() {
 }
 
 // ══════════════════════════════════════════════
-//  ADMIN CRUD & MODALS
+//  SUPABASE DATA LOADING
+//  Pulls live content into `appData` (and `photographyData` for the
+//  scrapbook). Falls back silently to the hardcoded js/data.js values
+//  if Supabase can't be reached.
+// ══════════════════════════════════════════════
+async function loadAllData() {
+  if (!sb) return; // no Supabase SDK — stick with fallback data
+
+  try {
+    const [profileRes, projectsRes, legsRes, certsRes, photoRes] = await Promise.all([
+      sb.from('profile').select('*').eq('id', 1).maybeSingle(),
+      sb.from('projects').select('*').order('sort_order', { ascending: true }),
+      sb.from('legislations').select('*').order('sort_order', { ascending: true }),
+      sb.from('certs').select('*').order('sort_order', { ascending: true }),
+      sb.from('photography').select('*').order('sort_order', { ascending: true }),
+    ]);
+
+    if (profileRes.data) {
+      const p = profileRes.data;
+      appData.resumeURL = p.resume_url || appData.resumeURL;
+      appData.fullName = p.full_name;
+      appData.tagline = p.tagline;
+      appData.email = p.email;
+      appData.location = p.location;
+      appData.heroPhotoURL = p.hero_photo_url;
+      appData.profilePhotoURL = p.profile_photo_url;
+      applyProfileToDOM(p);
+    }
+
+    if (projectsRes.data) {
+      appData.projects = projectsRes.data.map(row => ({
+        id: row.id, title: row.title, desc: row.description || '',
+        tech: row.tech || [], demo: row.demo_url || '', github: row.github_url || '',
+        img: row.image_url || null
+      }));
+    }
+
+    if (legsRes.data) {
+      appData.legislations = legsRes.data.map(row => ({
+        id: row.id, category: row.category, name: row.name, title: row.title,
+        authors: row.authors, date: row.date_text, link: row.link
+      }));
+    }
+
+    if (certsRes.data) {
+      appData.certs = certsRes.data.map(row => ({ id: row.id, name: row.name, org: row.org }));
+    }
+
+    if (photoRes.data) {
+      photographyData = photoRes.data.map(row => ({
+        id: row.id, img: row.image_url, title: row.title,
+        dateTaken: row.date_taken, shotWith: row.shot_with, editedIn: row.edited_in
+      }));
+    }
+  } catch (e) {
+    console.warn('Could not load live data from Supabase, using fallback data.', e);
+  }
+}
+
+function applyProfileToDOM(p) {
+  const homeH1 = document.querySelector('.home-h1');
+  const heroName = document.querySelector('.hero-name-badge strong');
+  const ftLogo = document.querySelector('.ft-logo');
+  if (p.full_name) {
+    if (homeH1) homeH1.innerHTML = "Hello, I'm<br><em>" + p.full_name + "</em>";
+    if (heroName) heroName.textContent = p.full_name;
+    if (ftLogo) ftLogo.textContent = p.full_name;
+  }
+  const heroImg = document.getElementById('heroImg');
+  const profileImg = document.getElementById('profileImg');
+  if (p.hero_photo_url && heroImg) heroImg.src = p.hero_photo_url;
+  if (p.profile_photo_url && profileImg) profileImg.src = p.profile_photo_url;
+}
+
+function reRenderCurrentPage() {
+  const page = getCurrentPage();
+  if (page === 'profile') renderCerts();
+  if (page === 'projects') renderProjects();
+  if (page === 'legislations') renderLegislations();
+  if (page === 'projects' && typeof renderPhotography === 'function') renderPhotography();
+  if (document.body.classList.contains('admin-mode')) {
+    renderAdminCerts(); renderAdminProjects(); renderAdminLegislations(); renderAdminPhotography();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  ADMIN AUTH (Supabase Auth)
 // ══════════════════════════════════════════════
 let loginAttempts = 0;
 let lockoutTimer = null;
@@ -99,6 +185,7 @@ function requestAdmin() {
 }
 
 function openLoginModal() {
+  if (!sb) { showToast('Supabase is not configured — admin login unavailable.'); return; }
   const modal = document.getElementById('adminLoginModal');
   if (modal) modal.classList.add('open');
 }
@@ -110,12 +197,25 @@ function closeLoginModal() {
   if (err) err.textContent = '';
 }
 
-function loginAdmin() {
-  const passInput = document.getElementById('adminPassInput');
+async function attemptLogin() {
+  const passInput = document.getElementById('loginPassword');
+  const btn = document.getElementById('loginBtn');
   const err = document.getElementById('loginErr');
-  if (!passInput) return;
+  if (!passInput || !sb) return;
 
-  if (passInput.value === appData.adminPassword) {
+  btn.disabled = true;
+  btn.textContent = 'Logging in...';
+
+  const { error } = await sb.auth.signInWithPassword({
+    email: ADMIN_EMAIL,
+    password: passInput.value
+  });
+
+  btn.disabled = false;
+  btn.textContent = 'Login';
+
+  if (!error) {
+    sbIsAdmin = true;
     document.body.classList.add('admin-mode');
     closeLoginModal();
     openAdminPanel();
@@ -145,21 +245,33 @@ function loginAdmin() {
   }
 }
 
-function logoutAdmin() {
+async function logoutAdmin() {
+  if (sb) await sb.auth.signOut();
+  sbIsAdmin = false;
   document.body.classList.remove('admin-mode');
-  closeAdminPanel();
+  closeAdmin();
   showToast('Logged out.');
+}
+
+async function checkAdminSession() {
+  if (!sb) return;
+  const { data } = await sb.auth.getSession();
+  if (data && data.session) {
+    sbIsAdmin = true;
+    document.body.classList.add('admin-mode');
+  }
 }
 
 function openAdminPanel() {
   renderAdminCerts();
   renderAdminProjects();
   renderAdminLegislations();
+  renderAdminPhotography();
   const panel = document.getElementById('adminPanel');
   if (panel) panel.classList.add('open');
 }
 
-function closeAdminPanel() {
+function closeAdmin() {
   const panel = document.getElementById('adminPanel');
   if (panel) panel.classList.remove('open');
 }
@@ -182,22 +294,45 @@ function renderAdminCerts() {
 }
 function renderAdminProjects() {
   const el = document.getElementById('adminProjectsList');
-  if (el) el.innerHTML = adminList(appData.projects, 'editProject', 'deleteProject', p => p.title, p => p.tech.join(', '));
+  if (el) el.innerHTML = adminList(appData.projects, 'editProject', 'deleteProject', p => p.title, p => (p.tech || []).join(', '));
 }
 function renderAdminLegislations() {
   const el = document.getElementById('adminLegislationsList');
   if (el) el.innerHTML = adminList(appData.legislations, 'editLegislation', 'deleteLegislation', l => l.name || l.title, l => l.authors);
 }
+function renderAdminPhotography() {
+  const el = document.getElementById('adminPhotographyList');
+  if (!el) return;
+  const items = (typeof photographyData !== 'undefined') ? photographyData : [];
+  el.innerHTML = adminList(items, 'editPhotography', 'deletePhotography', ph => ph.title || 'Untitled', ph => ph.dateTaken || '');
+}
+
+// ══════════════════════════════════════════════
+//  ADMIN CRUD — all backed by Supabase
+// ══════════════════════════════════════════════
+
+function requireAdmin() {
+  if (!sb) { showToast('Supabase is not configured.'); return false; }
+  return true;
+}
 
 // — Certs —
-function saveCert() {
+async function saveCert() {
+  if (!requireAdmin()) return;
   const editId = document.getElementById('editingCertId').value;
   const name = document.getElementById('aCertName').value.trim();
   if (!name) { showToast('Enter a name.'); return; }
-  const cert = { id: editId ? +editId : Date.now(), name, org: document.getElementById('aCertOrg').value.trim() };
-  if (editId) { const i = appData.certs.findIndex(c => c.id === +editId); if (i !== -1) appData.certs[i] = cert; }
-  else appData.certs.push(cert);
-  renderCerts(); renderAdminCerts(); clearCertForm(); showToast(editId ? 'Cert updated ✓' : 'Cert added ✓');
+  const row = { name, org: document.getElementById('aCertOrg').value.trim() };
+
+  const { error } = editId
+    ? await sb.from('certs').update(row).eq('id', editId)
+    : await sb.from('certs').insert(row);
+
+  if (error) { showToast('Error saving cert.'); console.error(error); return; }
+
+  await loadAllData();
+  renderCerts(); renderAdminCerts(); clearCertForm();
+  showToast(editId ? 'Cert updated ✓' : 'Cert added ✓');
 }
 function editCert(id) {
   const c = appData.certs.find(x => x.id === id); if (!c) return;
@@ -206,9 +341,12 @@ function editCert(id) {
   document.getElementById('aCertOrg').value = c.org;
   showToast('Editing cert...');
 }
-function deleteCert(id) {
+async function deleteCert(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Delete this certification?')) return;
-  appData.certs = appData.certs.filter(c => c.id !== id);
+  const { error } = await sb.from('certs').delete().eq('id', id);
+  if (error) { showToast('Error deleting.'); console.error(error); return; }
+  await loadAllData();
   renderCerts(); renderAdminCerts(); showToast('Deleted.');
 }
 function clearCertForm() {
@@ -217,40 +355,58 @@ function clearCertForm() {
 }
 
 // — Projects —
-function saveProject() {
+async function saveProject() {
+  if (!requireAdmin()) return;
   const editId = document.getElementById('editingProjectId').value;
   const title = document.getElementById('aProjTitle').value.trim();
   if (!title) { showToast('Enter a title.'); return; }
   const imgFile = document.getElementById('aProjImg').files[0];
-  const finish = imgSrc => {
-    const proj = {
-      id: editId ? +editId : Date.now(), title,
-      desc: document.getElementById('aProjDesc').value.trim(),
-      tech: document.getElementById('aProjTech').value.split(',').map(t => t.trim()).filter(Boolean),
-      demo: document.getElementById('aProjDemo').value.trim(),
-      github: document.getElementById('aProjGit').value.trim(),
-      img: imgSrc
-    };
-    if (editId) { const i = appData.projects.findIndex(p => p.id === +editId); if (i !== -1) appData.projects[i] = proj; }
-    else appData.projects.push(proj);
-    renderProjects(); renderAdminProjects(); clearProjectForm(); showToast(editId ? 'Project updated ✓' : 'Project added ✓');
+
+  let imageUrl = editId ? (appData.projects.find(p => p.id === +editId)?.img || null) : null;
+  if (imgFile) {
+    try {
+      showToast('Uploading image...');
+      imageUrl = await sbUploadFile(imgFile, 'projects');
+    } catch (e) {
+      showToast('Image upload failed.'); console.error(e); return;
+    }
+  }
+
+  const row = {
+    title,
+    description: document.getElementById('aProjDesc').value.trim(),
+    tech: document.getElementById('aProjTech').value.split(',').map(t => t.trim()).filter(Boolean),
+    demo_url: document.getElementById('aProjDemo').value.trim(),
+    github_url: document.getElementById('aProjGit').value.trim(),
+    image_url: imageUrl
   };
-  if (imgFile) { const r = new FileReader(); r.onload = e => finish(e.target.result); r.readAsDataURL(imgFile); }
-  else finish(editId ? (appData.projects.find(p => p.id === +editId)?.img || null) : null);
+
+  const { error } = editId
+    ? await sb.from('projects').update(row).eq('id', editId)
+    : await sb.from('projects').insert(row);
+
+  if (error) { showToast('Error saving project.'); console.error(error); return; }
+
+  await loadAllData();
+  renderProjects(); renderAdminProjects(); clearProjectForm();
+  showToast(editId ? 'Project updated ✓' : 'Project added ✓');
 }
 function editProject(id) {
   const p = appData.projects.find(x => x.id === id); if (!p) return;
   document.getElementById('editingProjectId').value = id;
   document.getElementById('aProjTitle').value = p.title;
   document.getElementById('aProjDesc').value = p.desc;
-  document.getElementById('aProjTech').value = p.tech.join(', ');
+  document.getElementById('aProjTech').value = (p.tech || []).join(', ');
   document.getElementById('aProjDemo').value = p.demo || '';
   document.getElementById('aProjGit').value = p.github || '';
   showToast('Editing project...');
 }
-function deleteProject(id) {
+async function deleteProject(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Delete this project?')) return;
-  appData.projects = appData.projects.filter(p => p.id !== id);
+  const { error } = await sb.from('projects').delete().eq('id', id);
+  if (error) { showToast('Error deleting.'); console.error(error); return; }
+  await loadAllData();
   renderProjects(); renderAdminProjects(); showToast('Deleted.');
 }
 function clearProjectForm() {
@@ -260,14 +416,29 @@ function clearProjectForm() {
 }
 
 // — Legislations —
-function saveLegislation() {
+async function saveLegislation() {
+  if (!requireAdmin()) return;
   const editId = document.getElementById('editingLegId').value;
   const title = document.getElementById('aLegTitle').value.trim();
   if (!title) { showToast('Enter a title.'); return; }
-  const leg = { id: editId ? +editId : Date.now(), category: document.getElementById('aLegCategory')?.value || 'senate', name: title, title: document.getElementById('aLegDesc').value.trim(), authors: document.getElementById('aLegAuthors').value.trim(), date: document.getElementById('aLegDate')?.value.trim() || '', link: document.getElementById('aLegLink').value.trim() };
-  if (editId) { const i = appData.legislations.findIndex(l => l.id === +editId); if (i !== -1) appData.legislations[i] = leg; }
-  else appData.legislations.push(leg);
-  renderLegislations(); renderAdminLegislations(); clearLegForm(); showToast(editId ? 'Updated ✓' : 'Added ✓');
+  const row = {
+    category: document.getElementById('aLegCategory')?.value || 'senate',
+    name: title,
+    title: document.getElementById('aLegDesc').value.trim(),
+    authors: document.getElementById('aLegAuthors').value.trim(),
+    date_text: document.getElementById('aLegDate')?.value.trim() || '',
+    link: document.getElementById('aLegLink').value.trim()
+  };
+
+  const { error } = editId
+    ? await sb.from('legislations').update(row).eq('id', editId)
+    : await sb.from('legislations').insert(row);
+
+  if (error) { showToast('Error saving.'); console.error(error); return; }
+
+  await loadAllData();
+  renderLegislations(); renderAdminLegislations(); clearLegForm();
+  showToast(editId ? 'Updated ✓' : 'Added ✓');
 }
 function editLegislation(id) {
   const l = appData.legislations.find(x => x.id === id); if (!l) return;
@@ -280,9 +451,12 @@ function editLegislation(id) {
   document.getElementById('aLegLink').value = l.link || '';
   showToast('Editing legislation...');
 }
-function deleteLegislation(id) {
+async function deleteLegislation(id) {
+  if (!requireAdmin()) return;
   if (!confirm('Delete?')) return;
-  appData.legislations = appData.legislations.filter(l => l.id !== id);
+  const { error } = await sb.from('legislations').delete().eq('id', id);
+  if (error) { showToast('Error deleting.'); console.error(error); return; }
+  await loadAllData();
   renderLegislations(); renderAdminLegislations(); showToast('Deleted.');
 }
 function clearLegForm() {
@@ -291,31 +465,111 @@ function clearLegForm() {
   const catEl = document.getElementById('aLegCategory'); if (catEl) catEl.value = 'senate';
 }
 
+// — Photography (scrapbook) —
+async function savePhotography() {
+  if (!requireAdmin()) return;
+  const editId = document.getElementById('editingPhotoId').value;
+  const imgFile = document.getElementById('aPhotoImg').files[0];
+  let imageUrl = editId ? (photographyData.find(p => p.id === +editId)?.img || null) : null;
+
+  if (imgFile) {
+    try {
+      showToast('Uploading photo...');
+      imageUrl = await sbUploadFile(imgFile, 'photography');
+    } catch (e) {
+      showToast('Photo upload failed.'); console.error(e); return;
+    }
+  }
+  if (!imageUrl) { showToast('Choose an image.'); return; }
+
+  const row = {
+    title: document.getElementById('aPhotoTitle').value.trim(),
+    image_url: imageUrl,
+    date_taken: document.getElementById('aPhotoDate').value.trim(),
+    shot_with: document.getElementById('aPhotoShotWith').value.trim(),
+    edited_in: document.getElementById('aPhotoEditedIn').value.trim()
+  };
+
+  const { error } = editId
+    ? await sb.from('photography').update(row).eq('id', editId)
+    : await sb.from('photography').insert(row);
+
+  if (error) { showToast('Error saving photo.'); console.error(error); return; }
+
+  await loadAllData();
+  if (typeof renderPhotography === 'function') renderPhotography();
+  renderAdminPhotography(); clearPhotoForm();
+  showToast(editId ? 'Photo updated ✓' : 'Photo added ✓');
+}
+function editPhotography(id) {
+  const ph = photographyData.find(x => x.id === id); if (!ph) return;
+  document.getElementById('editingPhotoId').value = id;
+  document.getElementById('aPhotoTitle').value = ph.title || '';
+  document.getElementById('aPhotoDate').value = ph.dateTaken || '';
+  document.getElementById('aPhotoShotWith').value = ph.shotWith || '';
+  document.getElementById('aPhotoEditedIn').value = ph.editedIn || '';
+  showToast('Editing photo...');
+}
+async function deletePhotography(id) {
+  if (!requireAdmin()) return;
+  if (!confirm('Delete this photo?')) return;
+  const { error } = await sb.from('photography').delete().eq('id', id);
+  if (error) { showToast('Error deleting.'); console.error(error); return; }
+  await loadAllData();
+  if (typeof renderPhotography === 'function') renderPhotography();
+  renderAdminPhotography(); showToast('Deleted.');
+}
+function clearPhotoForm() {
+  document.getElementById('editingPhotoId').value = '';
+  ['aPhotoTitle', 'aPhotoDate', 'aPhotoShotWith', 'aPhotoEditedIn'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('aPhotoImg').value = '';
+}
+
 // — Personal & media —
-function savePersonal() {
-  const name = document.getElementById('aName').value;
-  const homeH1 = document.querySelector('.home-h1');
-  const heroName = document.querySelector('.hero-name-badge strong');
-  const ftLogo = document.querySelector('.ft-logo');
-  if (homeH1) homeH1.innerHTML = "Hello, I'm<br><em>" + name + "</em>";
-  if (heroName) heroName.textContent = name;
-  if (ftLogo) ftLogo.textContent = name;
+async function savePersonal() {
+  if (!requireAdmin()) return;
+  const row = {
+    full_name: document.getElementById('aName').value.trim(),
+    tagline: document.getElementById('aTagline').value.trim(),
+    email: document.getElementById('aEmail').value.trim(),
+    location: document.getElementById('aLocation').value.trim()
+  };
+  const { error } = await sb.from('profile').update(row).eq('id', 1);
+  if (error) { showToast('Error saving.'); console.error(error); return; }
+  await loadAllData();
   showToast('Saved ✓');
 }
-function saveResume() {
+async function saveResume() {
+  if (!requireAdmin()) return;
   const f = document.getElementById('aResume').files[0];
   if (!f) { showToast('No file selected.'); return; }
-  const r = new FileReader();
-  r.onload = e => { appData.resumeB64 = e.target.result.split(',')[1]; showToast('Resume updated ✓'); };
-  r.readAsDataURL(f);
+  try {
+    showToast('Uploading resume...');
+    const url = await sbUploadFile(f, 'resume');
+    const { error } = await sb.from('profile').update({ resume_url: url }).eq('id', 1);
+    if (error) throw error;
+    await loadAllData();
+    showToast('Resume updated ✓');
+  } catch (e) {
+    showToast('Resume upload failed.'); console.error(e);
+  }
 }
-function savePhotos() {
+async function savePhotos() {
+  if (!requireAdmin()) return;
   const h = document.getElementById('aHeroPhoto').files[0];
   const p = document.getElementById('aProfilePhoto').files[0];
-  const heroImg = document.getElementById('heroImg');
-  const profileImg = document.getElementById('profileImg');
-  if (h && heroImg) { const r = new FileReader(); r.onload = e => { heroImg.src = e.target.result; showToast('Hero updated ✓'); }; r.readAsDataURL(h); }
-  if (p && profileImg) { const r = new FileReader(); r.onload = e => { profileImg.src = e.target.result; showToast('Profile updated ✓'); }; r.readAsDataURL(p); }
+  const row = {};
+  try {
+    if (h) { showToast('Uploading hero photo...'); row.hero_photo_url = await sbUploadFile(h, 'profile'); }
+    if (p) { showToast('Uploading profile photo...'); row.profile_photo_url = await sbUploadFile(p, 'profile'); }
+    if (Object.keys(row).length === 0) { showToast('No file selected.'); return; }
+    const { error } = await sb.from('profile').update(row).eq('id', 1);
+    if (error) throw error;
+    await loadAllData();
+    showToast('Photos updated ✓');
+  } catch (e) {
+    showToast('Photo upload failed.'); console.error(e);
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -333,14 +587,14 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-function toggleMobile() { 
+function toggleMobile() {
   const el = document.getElementById('mobileMenu');
-  if (el) el.classList.toggle('open'); 
+  if (el) el.classList.toggle('open');
 }
 
-window.addEventListener('scroll', () => { 
+window.addEventListener('scroll', () => {
   const nav = document.getElementById('navbar') || document.querySelector('nav');
-  if (nav) nav.classList.toggle('scrolled', window.scrollY > 20); 
+  if (nav) nav.classList.toggle('scrolled', window.scrollY > 20);
 });
 
 function observeReveal() {
@@ -391,12 +645,21 @@ document.addEventListener('keydown', e => {
 // ══════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════
-(function init() {
+(async function init() {
   setActiveNav();
+  await checkAdminSession();
+  await loadAllData();
+
   const page = getCurrentPage();
   if (page === 'profile') { initSkillBars(); renderCerts(); }
   if (page === 'projects') renderProjects();
   if (page === 'legislations') renderLegislations();
+  if (page === 'projects' && typeof renderPhotography === 'function') renderPhotography();
+
+  if (document.body.classList.contains('admin-mode')) {
+    renderAdminCerts(); renderAdminProjects(); renderAdminLegislations(); renderAdminPhotography();
+  }
+
   observeReveal();
   if (new URLSearchParams(window.location.search).get('admin') === '1') openLoginModal();
 })();
