@@ -1,3 +1,10 @@
+// js/data.js
+// FALLBACK data only. On page load, main.js tries to fetch live data from
+// Supabase; if that fails (offline, Supabase down, ad-blocker, etc.) the
+// site falls back to whatever is hardcoded here so it still works.
+// Once Supabase is reachable, this data is replaced in memory — editing
+// this file no longer changes what visitors see day-to-day, only what
+// they see if Supabase can't be reached.
 const appData = {
   resumeURL:'https://dlsudphl-my.sharepoint.com/:b:/g/personal/arp0144_dlsud_edu_ph/IQB2LY9UGkTtR6OrBxvLRemTAfVg_xS8D4Km_waNXwoXERM?e=0vTxjs',
   projects: [
