@@ -275,6 +275,8 @@ footer{background:var(--dark-brown);color:var(--cream);padding:40px 52px;display
 .admin-item-info strong{font-size:13px;color:var(--dark-brown);display:block;}
 .admin-item-info small{font-size:11px;color:var(--soft-gray);}
 .admin-item-btns{display:flex;gap:6px;flex-shrink:0;}
+.admin-btn:disabled{opacity:0.3;cursor:default;}
+.admin-btn-icon{padding:6px 10px !important;font-size:12px !important;line-height:1;}
 
 /* Toast */
 .toast{position:fixed;bottom:28px;right:28px;z-index:2000;background:var(--dark-brown);color:var(--cream);padding:12px 22px;border-radius:var(--radius-pill);font-size:13px;font-weight:500;box-shadow:var(--shadow-md);opacity:0;transform:translateY(12px);transition:all 0.3s;pointer-events:none;}
