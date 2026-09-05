@@ -153,10 +153,37 @@ function applyProfileToDOM(p) {
     if (heroName) heroName.textContent = p.full_name;
     if (ftLogo) ftLogo.textContent = p.full_name;
   }
+
+  // Tagline — shown under the name on the home page
+  const homeTagline = document.querySelector('.home-tagline');
+  if (p.tagline && homeTagline) homeTagline.textContent = p.tagline;
+
+  // Email & Location — shown as the two contact cards on the Social page
+  const ccVals = document.querySelectorAll('.contact-card .cc-val');
+  if (ccVals[0] && p.email) ccVals[0].textContent = p.email;
+  if (ccVals[1] && p.location) ccVals[1].textContent = p.location;
+
   const heroImg = document.getElementById('heroImg');
   const profileImg = document.getElementById('profileImg');
   if (p.hero_photo_url && heroImg) heroImg.src = p.hero_photo_url;
   if (p.profile_photo_url && profileImg) profileImg.src = p.profile_photo_url;
+}
+
+// Fills the admin "Personal Info" inputs with whatever is currently live
+// in appData, instead of leaving them at the hardcoded HTML placeholders.
+// Without this, saving would silently overwrite fresh data with stale
+// defaults whenever a field wasn't touched.
+function populateAdminPersonalFields() {
+  const map = {
+    aName: appData.fullName,
+    aTagline: appData.tagline,
+    aEmail: appData.email,
+    aLocation: appData.location
+  };
+  Object.entries(map).forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el && val !== undefined && val !== null) el.value = val;
+  });
 }
 
 function reRenderCurrentPage() {
@@ -263,6 +290,7 @@ async function checkAdminSession() {
 }
 
 function openAdminPanel() {
+  populateAdminPersonalFields();
   renderAdminCerts();
   renderAdminProjects();
   renderAdminLegislations();
@@ -534,8 +562,17 @@ async function savePersonal() {
     email: document.getElementById('aEmail').value.trim(),
     location: document.getElementById('aLocation').value.trim()
   };
-  const { error } = await sb.from('profile').update(row).eq('id', 1);
-  if (error) { showToast('Error saving.'); console.error(error); return; }
+  const { data, error } = await sb.from('profile').update(row).eq('id', 1).select();
+  if (error) {
+    showToast('Error saving: ' + error.message);
+    console.error('savePersonal error:', error);
+    return;
+  }
+  if (!data || data.length === 0) {
+    showToast('No profile row found — check supabase-schema.sql was run.');
+    console.warn('savePersonal: update matched 0 rows. Does a profile row with id=1 exist?');
+    return;
+  }
   await loadAllData();
   showToast('Saved ✓');
 }
