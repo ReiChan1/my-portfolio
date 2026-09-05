@@ -138,7 +138,8 @@ async function loadAllData() {
     if (photoRes.data) {
       photographyData = photoRes.data.map(row => ({
         id: row.id, img: row.image_url, title: row.title,
-        dateTaken: row.date_taken, shotWith: row.shot_with, editedIn: row.edited_in
+        dateTaken: row.date_taken, shotWith: row.shot_with, editedIn: row.edited_in,
+        sortOrder: row.sort_order || 0
       }));
     }
   } catch (e) {
@@ -344,7 +345,46 @@ function renderAdminPhotography() {
   const el = document.getElementById('adminPhotographyList');
   if (!el) return;
   const items = (typeof photographyData !== 'undefined') ? photographyData : [];
-  el.innerHTML = adminList(items, 'editPhotography', 'deletePhotography', ph => ph.title || 'Untitled', ph => ph.dateTaken || '');
+  el.innerHTML = items.map((ph, i) => `
+    <div class="admin-item">
+      <div class="admin-item-info"><strong>${ph.title || 'Untitled'}</strong><small>${ph.dateTaken || ''}</small></div>
+      <div class="admin-item-btns">
+        <button class="admin-btn secondary admin-btn-icon" onclick="sbMovePhotography(${ph.id}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="Move earlier">▲</button>
+        <button class="admin-btn secondary admin-btn-icon" onclick="sbMovePhotography(${ph.id}, 1)" ${i === items.length - 1 ? 'disabled' : ''} aria-label="Move later">▼</button>
+        <button class="admin-btn secondary" style="padding:6px 12px;font-size:11px;" onclick="editPhotography(${ph.id})">Edit</button>
+        <button class="admin-btn danger" style="padding:6px 12px;font-size:11px;" onclick="deletePhotography(${ph.id})">Del</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Swaps this photo's sort_order with its neighbor's (direction: -1 = move
+// earlier in the scrapbook, +1 = move later), then persists and re-renders.
+async function sbMovePhotography(id, direction) {
+  if (!requireAdmin()) return;
+  const idx = photographyData.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  const swapIdx = idx + direction;
+  if (swapIdx < 0 || swapIdx >= photographyData.length) return;
+
+  const current = photographyData[idx];
+  const neighbor = photographyData[swapIdx];
+
+  const [{ error: e1 }, { error: e2 }] = await Promise.all([
+    sb.from('photography').update({ sort_order: neighbor.sortOrder }).eq('id', current.id),
+    sb.from('photography').update({ sort_order: current.sortOrder }).eq('id', neighbor.id)
+  ]);
+
+  if (e1 || e2) {
+    showToast('Error reordering photo.');
+    console.error('sbMovePhotography error:', e1 || e2);
+    return;
+  }
+
+  await loadAllData();
+  if (typeof renderPhotography === 'function') renderPhotography();
+  renderAdminPhotography();
+  showToast('Reordered ✓');
 }
 
 // ══════════════════════════════════════════════
@@ -529,6 +569,11 @@ async function savePhotography() {
     shot_with: document.getElementById('aPhotoShotWith').value.trim(),
     edited_in: document.getElementById('aPhotoEditedIn').value.trim()
   };
+  if (!editId) {
+    // New photo — put it at the end of the current order.
+    const maxOrder = photographyData.reduce((max, p) => Math.max(max, p.sortOrder || 0), 0);
+    row.sort_order = maxOrder + 1;
+  }
 
   const { error } = editId
     ? await sb.from('photography').update(row).eq('id', editId)
