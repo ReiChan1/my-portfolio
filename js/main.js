@@ -109,6 +109,8 @@ async function loadAllData() {
       appData.tagline = p.tagline;
       appData.email = p.email;
       appData.location = p.location;
+      appData.homeIntro = p.home_intro;
+      appData.introParagraph = p.intro_paragraph;
       appData.heroPhotoURL = p.hero_photo_url;
       appData.profilePhotoURL = p.profile_photo_url;
       applyProfileToDOM(p);
@@ -158,6 +160,14 @@ function applyProfileToDOM(p) {
   const homeTagline = document.querySelector('.home-tagline');
   if (p.tagline && homeTagline) homeTagline.textContent = p.tagline;
 
+  // Home page intro paragraph (under the tagline/pills on index.html)
+  const homeIntro = document.querySelector('.home-intro');
+  if (p.home_intro && homeIntro) homeIntro.textContent = p.home_intro;
+
+  // "Who I Am" introduction paragraph on the Profile page
+  const introParagraph = document.querySelector('.bc-intro .bc-p');
+  if (p.intro_paragraph && introParagraph) introParagraph.textContent = p.intro_paragraph;
+
   // Email & Location — shown as the two contact cards on the Social page
   const ccVals = document.querySelectorAll('.contact-card .cc-val');
   if (ccVals[0] && p.email) ccVals[0].textContent = p.email;
@@ -178,7 +188,9 @@ function populateAdminPersonalFields() {
     aName: appData.fullName,
     aTagline: appData.tagline,
     aEmail: appData.email,
-    aLocation: appData.location
+    aLocation: appData.location,
+    aHomeIntro: appData.homeIntro,
+    aIntroParagraph: appData.introParagraph
   };
   Object.entries(map).forEach(([id, val]) => {
     const el = document.getElementById(id);
@@ -560,7 +572,9 @@ async function savePersonal() {
     full_name: document.getElementById('aName').value.trim(),
     tagline: document.getElementById('aTagline').value.trim(),
     email: document.getElementById('aEmail').value.trim(),
-    location: document.getElementById('aLocation').value.trim()
+    location: document.getElementById('aLocation').value.trim(),
+    home_intro: document.getElementById('aHomeIntro').value.trim(),
+    intro_paragraph: document.getElementById('aIntroParagraph').value.trim()
   };
   const { data, error } = await sb.from('profile').update(row).eq('id', 1).select();
   if (error) {
